@@ -60,9 +60,9 @@
    <widget class="QPushButton" name="addChanelButton">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>10</x>
       <y>500</y>
-      <width>231</width>
+      <width>240</width>
       <height>50</height>
      </rect>
     </property>
@@ -73,9 +73,9 @@
    <widget class="QPushButton" name="deleteChannelButton">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>260</x>
       <y>500</y>
-      <width>251</width>
+      <width>240</width>
       <height>50</height>
      </rect>
     </property>
@@ -229,7 +229,7 @@
      <x>0</x>
      <y>0</y>
      <width>789</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menufgh">

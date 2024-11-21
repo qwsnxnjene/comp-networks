@@ -50,7 +50,7 @@
     <rect>
      <x>10</x>
      <y>90</y>
-     <width>521</width>
+     <width>251</width>
      <height>151</height>
     </rect>
    </property>
@@ -107,7 +107,7 @@
     <rect>
      <x>10</x>
      <y>260</y>
-     <width>251</width>
+     <width>431</width>
      <height>111</height>
     </rect>
    </property>
@@ -120,7 +120,7 @@
     <rect>
      <x>10</x>
      <y>550</y>
-     <width>521</width>
+     <width>431</width>
      <height>161</height>
     </rect>
    </property>
@@ -155,7 +155,7 @@
     <rect>
      <x>10</x>
      <y>410</y>
-     <width>521</width>
+     <width>431</width>
      <height>111</height>
     </rect>
    </property>
@@ -215,9 +215,9 @@
    <property name="geometry">
     <rect>
      <x>280</x>
-     <y>260</y>
-     <width>251</width>
-     <height>111</height>
+     <y>90</y>
+     <width>161</width>
+     <height>151</height>
     </rect>
    </property>
   </widget>
@@ -228,7 +228,7 @@
    <property name="geometry">
     <rect>
      <x>280</x>
-     <y>230</y>
+     <y>60</y>
      <width>131</width>
      <height>41</height>
     </rect>
@@ -256,6 +256,162 @@
     <string>Готово</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="addButtonLoads">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>260</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Добавить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="deleteButtonLoads">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>302</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Удалить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="copyButtonLoads">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>350</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Копировать</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="copyButtonPackages">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>180</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Копировать</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="deleteButtonPackages">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>132</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Удалить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="addButtonPackages">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>90</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Добавить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="addButtonChannels">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>410</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Добавить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="copyButtonChannels">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>500</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Копировать</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="deleteButtonChannels">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>452</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Удалить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="deleteButtonRouters">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>591</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Удалить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="copyButtonRouters">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>639</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Копировать</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="addButtonRouters">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>549</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Добавить</string>
+   </property>
+  </widget>
   <zorder>labelInput</zorder>
   <zorder>inputNumOfPoints</zorder>
   <zorder>labelInput_2</zorder>
@@ -271,6 +427,18 @@
   <zorder>tableLoads</zorder>
   <zorder>tableRoutersInput</zorder>
   <zorder>tablePointInput</zorder>
+  <zorder>addButtonLoads</zorder>
+  <zorder>deleteButtonLoads</zorder>
+  <zorder>copyButtonLoads</zorder>
+  <zorder>copyButtonPackages</zorder>
+  <zorder>deleteButtonPackages</zorder>
+  <zorder>addButtonPackages</zorder>
+  <zorder>addButtonChannels</zorder>
+  <zorder>copyButtonChannels</zorder>
+  <zorder>deleteButtonChannels</zorder>
+  <zorder>deleteButtonRouters</zorder>
+  <zorder>copyButtonRouters</zorder>
+  <zorder>addButtonRouters</zorder>
  </widget>
  <resources/>
  <connections/>
