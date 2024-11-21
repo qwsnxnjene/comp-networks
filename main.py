@@ -1,7 +1,7 @@
 import sys
 from PyQt6 import QtWidgets
-from MainWindow import Ui_MainWindow
-from inputWindow import Ui_DialogAdd
+from main_window import Ui_MainWindow
+from input_window import Ui_DialogAdd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import networkx as nx
@@ -9,7 +9,7 @@ import networkx as nx
 
 class GraphWidget(FigureCanvas):
     def __init__(self, parent=None):
-        fig = plt.figure(figsize=(7, 7))
+        fig = plt.figure(figsize=(5, 5))
         super(GraphWidget, self).__init__(fig)
         self.ax = fig.add_subplot(111)
         self.setParent(parent)
@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def show_graph(self):
         G = nx.Graph()
-        G.add_edges_from([(1, 2), (1, 3), (2, 4), (3, 4)])
+        G.add_edges_from([(1, 2), (1, 3), (2, 4), (3, 4), (5, 1)])
         self.graph_widget.plot(G)
         self.plotWidget.setVisible(True)
 
