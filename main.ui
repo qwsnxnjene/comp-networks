@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1014</width>
+    <height>1040</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Система проектирования сети</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="plotWidget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>700</width>
+      <height>700</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="inputButton">
+    <property name="geometry">
+     <rect>
+      <x>699</x>
+      <y>0</y>
+      <width>301</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Ввести входные данные</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tablePoint">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>80</y>
+      <width>301</width>
+      <height>200</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tableRouters">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>310</y>
+      <width>301</width>
+      <height>200</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="addChanelButton">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>700</y>
+      <width>350</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Добавить канал</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="deleteChannelButton">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>700</y>
+      <width>350</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Удалить канал</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tableChannels">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>540</y>
+      <width>301</width>
+      <height>200</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelInput">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>50</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Таблица узлов:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelInput_2">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>280</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Таблица маршрутизаторов:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelInput_3">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>510</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Таблица каналов связи:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelInput_4">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>740</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Таблица каналов связи:</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tableUsages">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>770</y>
+      <width>301</width>
+      <height>200</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tablePackages">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>770</y>
+      <width>301</width>
+      <height>200</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelInput_5">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>740</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Таблица пакетов данных:</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1014</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menufgh">
+    <property name="title">
+     <string>Файл</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="action_open"/>
+    <addaction name="action_save"/>
+   </widget>
+   <addaction name="menufgh"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_open">
+   <property name="text">
+    <string>Открыть файл</string>
+   </property>
+  </action>
+  <action name="action_save">
+   <property name="text">
+    <string>Сохранить файл</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
