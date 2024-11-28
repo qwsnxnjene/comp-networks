@@ -132,18 +132,8 @@ class Ui_MainWindow(object):
         self.labelInput.setText(_translate("MainWindow", "Таблица узлов:"))
         self.labelInput_2.setText(_translate("MainWindow", "Таблица маршрутизаторов:"))
         self.labelInput_3.setText(_translate("MainWindow", "Таблица каналов связи:"))
-        self.labelInput_4.setText(_translate("MainWindow", "Таблица каналов связи:"))
+        self.labelInput_4.setText(_translate("MainWindow", "Матрица нагрузки:"))
         self.labelInput_5.setText(_translate("MainWindow", "Таблица пакетов данных:"))
         self.menufgh.setTitle(_translate("MainWindow", "Файл"))
         self.action_open.setText(_translate("MainWindow", "Открыть файл"))
         self.action_save.setText(_translate("MainWindow", "Сохранить файл"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec())

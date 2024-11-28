@@ -166,7 +166,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Таблица каналов связи:</string>
+     <string>Матрица нагрузки:</string>
     </property>
    </widget>
    <widget class="QTableWidget" name="tableUsages">

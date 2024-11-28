@@ -192,7 +192,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Автоматическое заполнение графа</string>
+    <string>Автоматическое создание графа</string>
    </property>
   </widget>
   <widget class="QPushButton" name="createButton">

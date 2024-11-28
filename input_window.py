@@ -177,7 +177,7 @@ class Ui_DialogAdd(object):
         self.labelInput_3.setText(_translate("DialogAdd", "Матрица нагрузки"))
         self.labelInput_4.setText(_translate("DialogAdd", "Информация о каналах"))
         self.labelInput_5.setText(_translate("DialogAdd", "Доступные маршрутизаторы"))
-        self.checkAuto.setText(_translate("DialogAdd", "Автоматическое заполнение графа"))
+        self.checkAuto.setText(_translate("DialogAdd", "Автоматическое создание графа"))
         self.createButton.setText(_translate("DialogAdd", "Создать"))
         self.labelInput_6.setText(_translate("DialogAdd", "Список пакетов:"))
         self.pushButton.setText(_translate("DialogAdd", "Готово"))
