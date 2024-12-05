@@ -76,6 +76,12 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
         self.setupUi(self)
         self.createButton.clicked.connect(self.manualCreate)
 
+        self.tablePointInput.setRowCount(0)
+        self.tableLoads.setRowCount(0)
+        self.tableChannelsInput.setRowCount(0)
+        self.tableRoutersInput.setRowCount(0)
+        self.tablePackagesInput.setRowCount(0)
+
         self.points = []
         self.edges = []
         self.packages = []
@@ -251,15 +257,19 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                     else:
                         error(f"Некорректная {self.tableChannelsInput.horizontalHeaderItem(j).text()} "
                               f"в {i + 1} строке информации о каналах!")
+                        return
                 else:
                     if v not in names_of_points:
                         error(f"Узла, указанного в {i + 1} строке информации о каналах нет в списке узлов")
                         return
                     tmp[self.tableChannelsInput.horizontalHeaderItem(j).text()] = v
 
-            edge = (min(tmp["Узел 1"], tmp["Узел 2"]), max(tmp["Узел 1"], tmp["Узел 2"]))
+            edge = (tmp["Узел 1"], tmp["Узел 2"])
             if edge in channels_name:
                 error("Каналы не могут дублироваться!")
+                return
+            if tmp["Узел 1"] == tmp["Узел 2"]:
+                error("Канал не может начинаться и заканчиваться в одном и том же узле")
                 return
             channels_name.append(edge)
             self.channels.append(tmp)
@@ -272,7 +282,7 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
             tmp = dict()
             for j in range(column_count):
                 v = self.tableRoutersInput.item(i, j).text()
-                if j > 1:
+                if j != 0:
                     if is_number(v):
                         if int(v) <= 0:
                             error(f"Отрицательная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
@@ -290,8 +300,26 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                         error("Название модели маршрутизатора не может дублироваться!")
                         return
                     names.append(v)
-                    tmp[self.tableLoads.horizontalHeaderItem(j).text()] = v
+                    tmp[self.tableRoutersInput.horizontalHeaderItem(j).text()] = v
             self.routers.append(tmp)
 
         self.correct_info = True
         self.close()
+
+    def clear(self):
+        self.inputNumOfPoints.clear()
+        self.checkAuto.setChecked(False)
+
+        self.tablePointInput.setRowCount(0)
+        self.tableLoads.setRowCount(0)
+        self.tableChannelsInput.setRowCount(0)
+        self.tableRoutersInput.setRowCount(0)
+        self.tablePackagesInput.setRowCount(0)
+
+        self.points = []
+        self.edges = []
+        self.packages = []
+        self.loads = []
+        self.channels = []
+        self.routers = []
+        self.correct_info = False

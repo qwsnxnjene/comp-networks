@@ -1,5 +1,6 @@
 import sys
 import time
+import json
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -76,9 +77,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.graph_widget = GraphWidget(self.plotWidget)
         self.dialog = InputDialog()
         self.edges = []
+        self.ps, self.rs, self.chs, self.pkgs, self.loads = [], [], [], [], []
 
-        self.addChanelButton.clicked.connect(self.show_graph)
+        self.clearButton.clicked.connect(self.clear)
         self.inputButton.clicked.connect(self.open_input)
+
+        self.addChanelButton.setVisible(False)
+        self.deleteChannelButton.setVisible(False)
+
+        self.action_save.triggered.connect(self.save_file)
+        self.action_open.triggered.connect(self.open_file)
 
     def show_graph(self):
         G = nx.Graph()
@@ -92,23 +100,142 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             time.sleep(0.5)
             if self.dialog.finished:
                 break
-        if self.dialog.correct_info:
-            self.put_info()
-            self.get_info()
+        to_read_info = self.dialog.correct_info
+        self.ps = self.dialog.points
+        self.rs = self.dialog.routers
+        self.chs = self.dialog.channels
+        self.pkgs = self.dialog.packages
+        self.loads = self.dialog.loads
+        self.dialog.clear()
+        if to_read_info:
+            self.addChanelButton.setVisible(True)
+            self.deleteChannelButton.setVisible(True)
+            self.put_info(self.ps, self.rs, self.chs, self.pkgs, self.loads)
+            self.get_info(self.chs)
+            self.show_graph()
 
-    def put_info(self):
-        setup_table(self.tablePoint, self.dialog.points)
-        setup_table(self.tableRouters, self.dialog.routers)
-        setup_table(self.tableChannels, self.dialog.channels)
-        setup_table(self.tablePackages, self.dialog.packages)
-        setup_table(self.tableUsages, self.dialog.loads)
+    def put_info(self, ps, rs, chs, pkgs, loads):
+        setup_table(self.tablePoint, ps)
+        setup_table(self.tableRouters, rs)
+        setup_table(self.tableChannels, chs)
+        setup_table(self.tablePackages, pkgs)
+        setup_table(self.tableUsages, loads)
 
-    def get_info(self):
-        for item in self.dialog.channels:
+    def get_info(self, ch):
+        for item in ch:
             x, y = item["Узел 1"], item["Узел 2"]
-            x, y = min(x, y), max(x, y)
+            #x, y = min(x, y), max(x, y)
             self.edges.append([x, y])
 
+    def clear(self):
+        self.edges = []
+        # self.ps, self.rs, self.chs, self.pkgs, self.loads = [], [], [], [], []
+        self.graph_widget.ax.clear()
+        self.plotWidget.setVisible(False)
+        self.tableUsages.setRowCount(0)
+        self.tablePoint.setRowCount(0)
+        self.tableRouters.setRowCount(0)
+        self.tableChannels.setRowCount(0)
+        self.tablePackages.setRowCount(0)
+        self.addChanelButton.setVisible(False)
+        self.deleteChannelButton.setVisible(False)
+
+    def save_file(self):
+        try:
+            to_save = dict()
+            to_save['Points'] = []
+            for point in self.ps:
+                tmp = dict()
+                tmp['Name'] = point['Имя узла']
+                tmp['X'] = point['X']
+                tmp['Y'] = point['Y']
+                to_save['Points'].append(tmp)
+            to_save['Routers'] = []
+            for router in self.rs:
+                tmp = dict()
+                tmp['Model Name'] = router['Модель']
+                tmp['Bandwidth'] = router['Пропускная способность']
+                tmp['Cost'] = router['Стоимость']
+                to_save['Routers'].append(tmp)
+            to_save['Channels'] = []
+            for chnl in self.chs:
+                tmp = dict()
+                tmp['Point 1'] = chnl['Узел 1']
+                tmp['Point 2'] = chnl['Узел 2']
+                tmp['Bandwidth'] = chnl['Пропускная способность']
+                tmp['Cost'] = chnl['Стоимость']
+                to_save['Channels'].append(tmp)
+            to_save['Packages'] = []
+            for pkg in self.pkgs:
+                tmp = dict()
+                tmp['Size'] = pkg['Размер пакета(в байтах)']
+                to_save['Packages'].append(tmp)
+            to_save['Loads'] = []
+            for load in self.loads:
+                tmp = dict()
+                tmp['From point'] = load['Из узла']
+                tmp['To point'] = load['В узел']
+                tmp['Info volume'] = load['Объём информации(в Байт/c)']
+                to_save['Loads'].append(tmp)
+
+            name = QtWidgets.QFileDialog.getSaveFileName(self, 'Сохранить файл')[0]
+
+            with open(f"{name}.json", "w") as fh:
+                json.dump(to_save, fh)
+            error(f"Файл успешно сохранен по адресу:\n{name}.json")
+        except Exception as e:
+            error(str(e))
+
+    def open_file(self):
+        file, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                        'Open File',
+                                                        './',
+                                                        'Config (*.json)')
+        if not file:
+            error("Некорректный файл!")
+            return
+        try:
+            with open(file, 'r') as f:
+                read_from = json.load(f)
+
+            self.clear()
+            for point in read_from['Points']:
+                tmp = dict()
+                tmp['Имя узла'] = point['Name']
+                tmp['X'] = point['X']
+                tmp['Y'] = point['Y']
+                self.ps.append(tmp)
+            for router in read_from['Routers']:
+                tmp = dict()
+                tmp['Модель'] = router['Model Name']
+                tmp['Пропускная способность'] = router['Bandwidth']
+                tmp['Стоимость'] = router['Cost']
+                self.rs.append(tmp)
+            for chnl in read_from['Channels']:
+                tmp = dict()
+                tmp['Узел 1'] = chnl['Point 1']
+                tmp['Узел 2'] = chnl['Point 2']
+                tmp['Пропускная способность'] = chnl['Bandwidth']
+                tmp['Стоимость'] = chnl['Cost']
+                self.chs.append(tmp)
+            for pkg in read_from['Packages']:
+                tmp = dict()
+                tmp['Размер пакета(в байтах)'] = pkg['Size']
+                self.pkgs.append(tmp)
+            for load in read_from['Loads']:
+                tmp = dict()
+                tmp['Из узла'] = load['From point']
+                tmp['В узел'] = load['To point']
+                tmp['Объём информации(в Байт/c)'] = load['Info volume']
+                self.loads.append(tmp)
+            self.put_info(self.ps, self.rs, self.chs, self.pkgs, self.loads)
+            self.get_info(self.chs)
+            self.show_graph()
+            self.addChanelButton.setVisible(True)
+            self.deleteChannelButton.setVisible(True)
+
+        except Exception as e:
+            error(f"Что-то пошло не так...\n {str(e)}")
 
 app = QtWidgets.QApplication(sys.argv)
 
