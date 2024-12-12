@@ -58,16 +58,6 @@ def cp(table: QtWidgets.QTableWidget):
                           QtWidgets.QTableWidgetItem(table.item(row_count - 2, j).text()))
 
 
-def read(table: QtWidgets.QTableWidget, out: list):
-    row_count = table.rowCount()
-    column_count = table.columnCount()
-
-    for i in range(row_count):
-        tmp = dict()
-        for j in range(column_count):
-            v = table.item(i, j)
-
-
 class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
     """Окно ввода входных данных"""
 
@@ -292,6 +282,7 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                     else:
                         error(f"Некорректная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
                               f" в {i + 1} строке доступных маршрутизаторов!")
+                        return
                 else:
                     if len(v) == 0:
                         error("Название модели маршрутизатора не может быть пустым!")

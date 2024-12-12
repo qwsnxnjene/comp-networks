@@ -10,7 +10,13 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from dialog import InputDialog
 from main_window import Ui_MainWindow
+from channel_ui import AddChannel
 
+
+#TO-DO
+#сделать матрицу нагрузки в виде матрицы, а не в виде таблицы
+#добавить функцию изменения данных, в основном пропускной способности
+#поиск путей маршрутов
 
 class GraphWidget(FigureCanvas):
     """Граф"""
@@ -34,7 +40,7 @@ def error(message: str):
     """error(message) выводит сообщение message в появляющемся окне"""
     msgBox = QMessageBox()
     msgBox.setWindowTitle("Внимание!")
-    message = message.split(':')[1][1:].capitalize()
+    #message = message.split(':')[1][1:].capitalize()
     msgBox.setText(message)
     msgBox.exec()
 
@@ -75,6 +81,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.plotWidget.setVisible(False)
         self.graph_widget = GraphWidget(self.plotWidget)
+        self.add_channel_widget = AddChannel()
         self.dialog = InputDialog()
         self.edges = []
         self.ps, self.rs, self.chs, self.pkgs, self.loads = [], [], [], [], []
@@ -88,8 +95,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_save.triggered.connect(self.save_file)
         self.action_open.triggered.connect(self.open_file)
 
+        self.addChanelButton.clicked.connect(self.add_channel)
+        self.deleteChannelButton.clicked.connect(self.delete_channel)
+
     def show_graph(self):
         G = nx.Graph()
+        #G.add_node(self.points)
         G.add_edges_from(self.edges)
         self.graph_widget.plot(G)
         self.plotWidget.setVisible(True)
@@ -237,6 +248,65 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         except Exception as e:
             error(f"Что-то пошло не так...\n {str(e)}")
 
+    def add_channel(self):
+        self.add_channel_widget.exec()
+        while True:
+            time.sleep(0.5)
+            if self.add_channel_widget.finished:
+                break
+        to_read_info = self.add_channel_widget.correct_info
+        x1, x2 = self.add_channel_widget.x1, self.add_channel_widget.x2
+        bw, cst = self.add_channel_widget.bandwidth, self.add_channel_widget.cost
+        self.add_channel_widget.clear()
+        if to_read_info:
+            try:
+                # читаем данные
+                new_channel = {
+                    "Узел 1": x1,
+                    "Узел 2": x2,
+                    "Пропускная способность": bw,
+                    "Стоимость": cst
+                }
+                tmp_points = [x['Имя узла'] for x in self.ps]
+                if new_channel['Узел 1'] not in tmp_points or new_channel['Узел 2'] not in tmp_points:
+                    error("Один из введенных вами узлов не существует!")
+                    return
+                self.chs.append(new_channel)
+                self.tableChannels.setRowCount(0)
+                setup_table(self.tableChannels, self.chs)
+                self.edges.append([new_channel['Узел 1'], new_channel['Узел 2']])
+
+                self.graph_widget.ax.clear()
+                self.plotWidget.setVisible(False)
+                self.show_graph()
+            except Exception as e:
+                error(str(e))
+
+    def delete_channel(self):
+        if len(self.tableChannels.selectedItems()) == 0:
+            error("Чтобы удалить канал, выберите его в Таблице Каналов!")
+            return
+        if self.tableChannels.rowCount() == 0:
+            error("Каналов нет!")
+            return
+        try:
+            if self.tableChannels.rowCount() > 0:
+                index = self.tableChannels.currentRow()
+                row_to_delete = []
+                for i in range(self.tableChannels.columnCount()):
+                    row_to_delete.append(self.tableChannels.item(index, i).text())
+                for i, j in enumerate(self.chs):
+                    if j['Узел 1'] == row_to_delete[0] and j['Узел 2'] == row_to_delete[1]:
+                        self.chs = self.chs[:i] + self.chs[i + 1:]
+                for i, j in enumerate(self.edges):
+                    if j[0] == row_to_delete[0] and j[1] == row_to_delete[1]:
+                        self.edges = self.edges[:i] + self.edges[i + 1:]
+                self.tableChannels.removeRow(self.tableChannels.currentRow())
+                self.graph_widget.ax.clear()
+                self.plotWidget.setVisible(False)
+                self.show_graph()
+        except Exception as e:
+            error(str(e))
 app = QtWidgets.QApplication(sys.argv)
 
 window = MainWindow()
