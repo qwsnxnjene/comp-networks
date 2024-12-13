@@ -15,6 +15,7 @@ from channel_ui import AddChannel
 
 #TO-DO
 #сделать матрицу нагрузки в виде матрицы, а не в виде таблицы
+#   для этого осталось: отображение в mainWindow, сохранение в json
 #добавить функцию изменения данных, в основном пропускной способности
 #поиск путей маршрутов
 
@@ -71,6 +72,31 @@ def setup_table(table: QtWidgets.QTableWidget, table_from: list):
         for i in range(rows):
             for j, h in enumerate(headers):
                 table.setItem(i, j, QtWidgets.QTableWidgetItem(str(table_from[i][h])))
+    except Exception as e:
+        error(str(e))
+
+
+def setup_matrix(table: QtWidgets.QTableWidget, columns: int, list_headers: list, table_from: list):
+    table.setEnabled(True)
+    table.setRowCount(0)
+    table.setColumnCount(columns)
+    table.setRowCount(columns)
+    table.setHorizontalHeaderLabels(list_headers)
+    table.setVerticalHeaderLabels(list_headers)
+    for i in range(columns):
+        table.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.Stretch)
+
+    try:
+        for load in table_from:
+            fr, to = None, None
+            for point in self.points:
+                if point['Имя узла'] == load['Из узла']:
+                    fr = int(point['Номер'])
+                if point['Имя узла'] == load['В узел']:
+                    to = int(point['Номер'])
+                if fr is not None and to is not None:
+                    break
+            table.setItem(fr - 1, to - 1, QtWidgets.QTableWidgetItem(load['Объём информации(в Байт/c)']))
     except Exception as e:
         error(str(e))
 
@@ -160,6 +186,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 tmp['Name'] = point['Имя узла']
                 tmp['X'] = point['X']
                 tmp['Y'] = point['Y']
+                tmp['ID'] = point['Номер']
                 to_save['Points'].append(tmp)
             to_save['Routers'] = []
             for router in self.rs:
@@ -215,6 +242,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 tmp['Имя узла'] = point['Name']
                 tmp['X'] = point['X']
                 tmp['Y'] = point['Y']
+                tmp['Номер'] = point['ID']
                 self.ps.append(tmp)
             for router in read_from['Routers']:
                 tmp = dict()

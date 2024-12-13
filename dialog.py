@@ -1,6 +1,7 @@
 import random
 
 from PyQt6 import QtWidgets
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QMessageBox
 
 from input_window import Ui_DialogAdd
@@ -8,7 +9,7 @@ from input_window import Ui_DialogAdd
 
 def setup_table(table: QtWidgets.QTableWidget, columns: int, rows: int, list_headers: list):
     """setup_table(table, columns, rows, list_headers) инициализирует таблицу table
-        с columns стоблцами и rows рядами, а также с заголовками столбцов list_headers
+       с columns стоблцами и rows рядами, а также с заголовками столбцов list_headers
     """
     table.setEnabled(True)
     table.setRowCount(0)
@@ -19,6 +20,24 @@ def setup_table(table: QtWidgets.QTableWidget, columns: int, rows: int, list_hea
         (table.horizontalHeader().
          setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.ResizeToContents))
     table.horizontalHeader().setStretchLastSection(True)
+
+
+def setup_matrix(table: QtWidgets.QTableWidget, columns: int, list_headers: list):
+    table.setEnabled(True)
+    table.setRowCount(0)
+    table.setColumnCount(columns)
+    table.setRowCount(columns)
+    table.setHorizontalHeaderLabels(list_headers)
+    table.setVerticalHeaderLabels(list_headers)
+    for i in range(columns):
+        table.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        for j in range(columns):
+            if i == j:
+                table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
+                table.item(i, j).setBackground(QColor.fromRgb(100, 0, 0))
+                continue
+            table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
+
 
 
 def error(message: str):
@@ -83,9 +102,9 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
         self.pushButton.clicked.connect(self.ready)
 
         # реализация Добавления, удаления и копирования в таблицах для входных данных
-        self.addButtonLoads.clicked.connect(lambda: load(self.tableLoads))
-        self.deleteButtonLoads.clicked.connect(lambda: rm(self.tableLoads))
-        self.copyButtonLoads.clicked.connect(lambda: cp(self.tableLoads))
+        # self.addButtonLoads.clicked.connect(lambda: load(self.tableLoads))
+        # self.deleteButtonLoads.clicked.connect(lambda: rm(self.tableLoads))
+        # self.copyButtonLoads.clicked.connect(lambda: cp(self.tableLoads))
 
         self.addButtonPackages.clicked.connect(lambda: load(self.tablePackagesInput))
         self.deleteButtonPackages.clicked.connect(lambda: rm(self.tablePackagesInput))
@@ -115,8 +134,8 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
 
         setup_table(self.tablePointInput,
                     3, n, ["Имя узла", "X", "Y"])
-        setup_table(self.tableLoads,
-                    3, 1, ["Из узла", "В узел", "Объём информации(в Бит/c)"])
+        setup_matrix(self.tableLoads,
+                     n, [str(i + 1) for i in range(n)])
         setup_table(self.tablePackagesInput,
                     1, 1, ["Размер пакета(в битах)"])
         setup_table(self.tableChannelsInput,
@@ -127,8 +146,8 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
     def autoCreate(self, n: int):
         setup_table(self.tablePointInput,
                     3, n, ["Имя узла", "X", "Y"])
-        setup_table(self.tableLoads,
-                    3, 1, ["Из узла", "В узел", "Объём информации(в Байт/c)"])
+        setup_matrix(self.tableLoads,
+                     n, [str(i + 1) for i in range(n)])
         setup_table(self.tablePackagesInput,
                     1, 1, ["Размер пакета(в байтах)"])
         setup_table(self.tableChannelsInput,
@@ -136,7 +155,7 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
         setup_table(self.tableRoutersInput,
                     3, 1, ["Модель", "Пропускная способность", "Стоимость"])
 
-        xs = [(random.randint(-n, n), random.randint(-n, n)) for i in range(n)]
+        xs = [(random.randint(-n, n), random.randint(-n, n)) for _ in range(n)]
         # защита от повторяющихся данных
         xs = list(set(xs))
         while len(xs) < n:
@@ -163,139 +182,141 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
             self.tableChannelsInput.setItem(i, 3, QtWidgets.QTableWidgetItem(price_default))
 
     def ready(self):
-        names_of_points = []
+        try:
+            names_of_points = []
 
-        row_count = self.tablePointInput.rowCount()
-        column_count = self.tablePointInput.columnCount()
+            row_count = self.tablePointInput.rowCount()
+            column_count = self.tablePointInput.columnCount()
 
-        # Проверка Информации об узлах
-        for i in range(row_count):
-            tmp = dict()
-            for j in range(column_count):
-                v = self.tablePointInput.item(i, j).text()
-                if j != 0 and is_number(v):
-                    tmp[self.tablePointInput.horizontalHeaderItem(j).text()] = int(v)
-                elif j == 0:
-                    if len(v) == 0:
-                        error("Имя узла не может быть пустым!")
-                        return
-                    if v in names_of_points:
-                        error("Имя узла не может дублироваться!")
-                        return
-                    tmp[self.tablePointInput.horizontalHeaderItem(j).text()] = v
-                    names_of_points.append(v)
-                else:
-                    error(f"Неверный формат информации об узлах! Строчка {i + 1},"
-                          f" столбец {self.tablePointInput.horizontalHeaderItem(j).text()}")
-                    return
-            self.points.append(tmp)
-
-        # Проверка Списка пакетов
-        row_count = self.tablePackagesInput.rowCount()
-        column_count = self.tablePackagesInput.columnCount()
-        for i in range(row_count):
-            tmp = dict()
-            for j in range(column_count):
-                v = self.tablePackagesInput.item(i, j).text()
-                if is_number(v):
-                    if int(v) <= 0:
-                        error(f"Неверный формат информации о пакетах!\n Отрицательный размер пакета! Строка {i + 1}")
-                        return
-                    tmp[self.tablePackagesInput.horizontalHeaderItem(j).text()] = int(v)
-                else:
-                    error(f"Неверный формат информации о пакетах! Строка {i + 1}")
-                    return
-            self.packages.append(tmp)
-
-        # Проверка Матрицы нагрузки
-        row_count = self.tableLoads.rowCount()
-        column_count = self.tableLoads.columnCount()
-        for i in range(row_count):
-            tmp = dict()
-            for j in range(column_count):
-                v = self.tableLoads.item(i, j).text()
-                if j == 2:
-                    if is_number(v):
-                        if int(v) <= 0:
-                            error(f"Отрицательный объём информации в {i + 1} строке матрицы нагрузки")
-                        tmp[self.tableLoads.horizontalHeaderItem(j).text()] = int(v)
+            # Проверка Информации об узлах
+            for i in range(row_count):
+                tmp = dict()
+                for j in range(column_count):
+                    v = self.tablePointInput.item(i, j).text()
+                    if j != 0 and is_number(v):
+                        tmp[self.tablePointInput.horizontalHeaderItem(j).text()] = int(v)
+                    elif j == 0:
+                        if len(v) == 0:
+                            error("Имя узла не может быть пустым!")
+                            return
+                        if v in names_of_points:
+                            error("Имя узла не может дублироваться!")
+                            return
+                        tmp[self.tablePointInput.horizontalHeaderItem(j).text()] = v
+                        names_of_points.append(v)
                     else:
-                        error(f"Некорректный объём информации в {i + 1} строке матрицы нагрузки")
+                        error(f"Неверный формат информации об узлах! Строчка {i + 1},"
+                              f" столбец {self.tablePointInput.horizontalHeaderItem(j).text()}")
                         return
-                else:
-                    if v not in names_of_points:
-                        error(f"Узла, указанного в {i + 1} строке матрицы нагрузки нет в списке узлов")
-                        return
-                    tmp[self.tableLoads.horizontalHeaderItem(j).text()] = v
-            self.loads.append(tmp)
+                tmp['Номер'] = str(i + 1)
+                self.points.append(tmp)
 
-        # Проверка Информации о каналах
-        row_count = self.tableChannelsInput.rowCount()
-        column_count = self.tableChannelsInput.columnCount()
-        channels_name = []
-        for i in range(row_count):
-            tmp = dict()
-            for j in range(column_count):
-                v = self.tableChannelsInput.item(i, j).text()
-                if j > 1:
+            # Проверка Списка пакетов
+            row_count = self.tablePackagesInput.rowCount()
+            column_count = self.tablePackagesInput.columnCount()
+            for i in range(row_count):
+                tmp = dict()
+                for j in range(column_count):
+                    v = self.tablePackagesInput.item(i, j).text()
                     if is_number(v):
                         if int(v) <= 0:
-                            error(f"Отрицательная {self.tableChannelsInput.horizontalHeaderItem(j).text()}"
-                                  f" в {i + 1} строке информации о каналах!")
+                            error(f"Неверный формат информации о пакетах!\n Отрицательный размер пакета! Строка {i + 1}")
+                            return
+                        tmp[self.tablePackagesInput.horizontalHeaderItem(j).text()] = int(v)
+                    else:
+                        error(f"Неверный формат информации о пакетах! Строка {i + 1}")
+                        return
+                self.packages.append(tmp)
+
+            # Проверка Матрицы нагрузки
+            row_count = self.tableLoads.rowCount()
+            column_count = self.tableLoads.columnCount()
+            for i in range(row_count):
+                tmp = dict()
+                for j in range(column_count):
+                    v = self.tableLoads.item(i, j).text()
+                    if is_number(v):
+                        if int(v) <= 0:
+                            error(f"Отрицательный объём информации в {i + 1} строке {j + 1} столбце матрицы нагрузки")
+                            return
+                        tmp['Из узла'] = [point['Имя узла'] for point in self.points if point['Номер'] == str(i + 1)][0]
+                        tmp['В узел'] = [point['Имя узла'] for point in self.points if point['Номер'] == str(j + 1)][0]
+                        tmp['Объём информации(в Байт/c)'] = int(v)
+                    elif v == '':
+                        continue
+                    else:
+                        error(f"Некорректный объём информации в {i + 1} строке {j + 1} столбце матрицы нагрузки")
+                        return
+                self.loads.append(tmp)
+
+            # Проверка Информации о каналах
+            row_count = self.tableChannelsInput.rowCount()
+            column_count = self.tableChannelsInput.columnCount()
+            channels_name = []
+            for i in range(row_count):
+                tmp = dict()
+                for j in range(column_count):
+                    v = self.tableChannelsInput.item(i, j).text()
+                    if j > 1:
+                        if is_number(v):
+                            if int(v) <= 0:
+                                error(f"Отрицательная {self.tableChannelsInput.horizontalHeaderItem(j).text()}"
+                                      f" в {i + 1} строке информации о каналах!")
+                                return
+                            tmp[self.tableChannelsInput.horizontalHeaderItem(j).text()] = v
+                        else:
+                            error(f"Некорректная {self.tableChannelsInput.horizontalHeaderItem(j).text()} "
+                                  f"в {i + 1} строке информации о каналах!")
+                            return
+                    else:
+                        if v not in names_of_points:
+                            error(f"Узла, указанного в {i + 1} строке информации о каналах нет в списке узлов")
                             return
                         tmp[self.tableChannelsInput.horizontalHeaderItem(j).text()] = v
-                    else:
-                        error(f"Некорректная {self.tableChannelsInput.horizontalHeaderItem(j).text()} "
-                              f"в {i + 1} строке информации о каналах!")
-                        return
-                else:
-                    if v not in names_of_points:
-                        error(f"Узла, указанного в {i + 1} строке информации о каналах нет в списке узлов")
-                        return
-                    tmp[self.tableChannelsInput.horizontalHeaderItem(j).text()] = v
 
-            edge = (tmp["Узел 1"], tmp["Узел 2"])
-            if edge in channels_name:
-                error("Каналы не могут дублироваться!")
-                return
-            if tmp["Узел 1"] == tmp["Узел 2"]:
-                error("Канал не может начинаться и заканчиваться в одном и том же узле")
-                return
-            channels_name.append(edge)
-            self.channels.append(tmp)
+                edge = (tmp["Узел 1"], tmp["Узел 2"])
+                if edge in channels_name:
+                    error("Каналы не могут дублироваться!")
+                    return
+                if tmp["Узел 1"] == tmp["Узел 2"]:
+                    error("Канал не может начинаться и заканчиваться в одном и том же узле")
+                    return
+                channels_name.append(edge)
+                self.channels.append(tmp)
 
-        # Проверка Доступных маршрутизаторов
-        row_count = self.tableRoutersInput.rowCount()
-        column_count = self.tableRoutersInput.columnCount()
-        names = []
-        for i in range(row_count):
-            tmp = dict()
-            for j in range(column_count):
-                v = self.tableRoutersInput.item(i, j).text()
-                if j != 0:
-                    if is_number(v):
-                        if int(v) <= 0:
-                            error(f"Отрицательная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
+            # Проверка Доступных маршрутизаторов
+            row_count = self.tableRoutersInput.rowCount()
+            column_count = self.tableRoutersInput.columnCount()
+            names = []
+            for i in range(row_count):
+                tmp = dict()
+                for j in range(column_count):
+                    v = self.tableRoutersInput.item(i, j).text()
+                    if j != 0:
+                        if is_number(v):
+                            if int(v) <= 0:
+                                error(f"Отрицательная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
+                                      f" в {i + 1} строке доступных маршрутизаторов!")
+                                return
+                            tmp[self.tableRoutersInput.horizontalHeaderItem(j).text()] = v
+                        else:
+                            error(f"Некорректная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
                                   f" в {i + 1} строке доступных маршрутизаторов!")
                             return
-                        tmp[self.tableRoutersInput.horizontalHeaderItem(j).text()] = v
                     else:
-                        error(f"Некорректная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
-                              f" в {i + 1} строке доступных маршрутизаторов!")
-                        return
-                else:
-                    if len(v) == 0:
-                        error("Название модели маршрутизатора не может быть пустым!")
-                        return
-                    if v in names:
-                        error("Название модели маршрутизатора не может дублироваться!")
-                        return
-                    names.append(v)
-                    tmp[self.tableRoutersInput.horizontalHeaderItem(j).text()] = v
-            self.routers.append(tmp)
-
-        self.correct_info = True
-        self.close()
+                        if len(v) == 0:
+                            error("Название модели маршрутизатора не может быть пустым!")
+                            return
+                        if v in names:
+                            error("Название модели маршрутизатора не может дублироваться!")
+                            return
+                        names.append(v)
+                        tmp[self.tableRoutersInput.horizontalHeaderItem(j).text()] = v
+                self.routers.append(tmp)
+                self.correct_info = True
+                self.close()
+        except Exception as e:
+            print(str(e))
 
     def clear(self):
         self.inputNumOfPoints.clear()
