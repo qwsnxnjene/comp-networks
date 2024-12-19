@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'main.ui'
+# Form implementation generated from reading ui file '.\main.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #
@@ -19,7 +19,7 @@ class Ui_MainWindow(object):
         self.plotWidget.setGeometry(QtCore.QRect(0, 0, 500, 500))
         self.plotWidget.setObjectName("plotWidget")
         self.inputButton = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.inputButton.setGeometry(QtCore.QRect(510, 0, 231, 41))
+        self.inputButton.setGeometry(QtCore.QRect(510, 0, 160, 41))
         self.inputButton.setObjectName("inputButton")
         self.tablePoint = QtWidgets.QTableWidget(parent=self.centralwidget)
         self.tablePoint.setGeometry(QtCore.QRect(510, 60, 471, 161))
@@ -88,8 +88,11 @@ class Ui_MainWindow(object):
         self.labelInput_5.setFont(font)
         self.labelInput_5.setObjectName("labelInput_5")
         self.clearButton = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.clearButton.setGeometry(QtCore.QRect(750, 0, 231, 41))
+        self.clearButton.setGeometry(QtCore.QRect(670, 0, 160, 41))
         self.clearButton.setObjectName("clearButton")
+        self.editButton = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.editButton.setGeometry(QtCore.QRect(830, 0, 151, 41))
+        self.editButton.setObjectName("editButton")
         self.plotWidget.raise_()
         self.inputButton.raise_()
         self.addChanelButton.raise_()
@@ -105,9 +108,10 @@ class Ui_MainWindow(object):
         self.tableChannels.raise_()
         self.tablePoint.raise_()
         self.clearButton.raise_()
+        self.editButton.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1000, 26))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1000, 21))
         self.menubar.setObjectName("menubar")
         self.menufgh = QtWidgets.QMenu(parent=self.menubar)
         self.menufgh.setObjectName("menufgh")
@@ -139,6 +143,7 @@ class Ui_MainWindow(object):
         self.labelInput_4.setText(_translate("MainWindow", "Матрица нагрузки:"))
         self.labelInput_5.setText(_translate("MainWindow", "Таблица пакетов данных:"))
         self.clearButton.setText(_translate("MainWindow", "Сброс"))
+        self.editButton.setText(_translate("MainWindow", "Редактировать данные"))
         self.menufgh.setTitle(_translate("MainWindow", "Файл"))
         self.action_open.setText(_translate("MainWindow", "Открыть файл"))
         self.action_save.setText(_translate("MainWindow", "Сохранить файл"))

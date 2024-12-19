@@ -5,19 +5,18 @@ import json
 import matplotlib.pyplot as plt
 import networkx as nx
 from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QMessageBox, QAbstractItemView
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from dialog import InputDialog
+from edit_window import EditDialog
 from main_window import Ui_MainWindow
 from channel_ui import AddChannel
 
 
-#TO-DO
-#сделать матрицу нагрузки в виде матрицы, а не в виде таблицы
-#   для этого осталось: отображение в mainWindow, сохранение в json
-#добавить функцию изменения данных, в основном пропускной способности
-#поиск путей маршрутов
+# TO-DO
+# поиск путей маршрутов - допилить
 
 class GraphWidget(FigureCanvas):
     """Граф"""
@@ -31,7 +30,7 @@ class GraphWidget(FigureCanvas):
     def plot(self, graph: nx.Graph):
         """plot(graph) отображает граф graph"""
         self.ax.clear()
-        pos = nx.circular_layout(graph)
+        pos = nx.get_node_attributes(graph, 'pos')
         nx.draw(graph, pos, ax=self.ax, with_labels=True, node_color='skyblue', node_size=800, font_size=10,
                 font_color='darkgreen', edge_color='gray')
         self.draw()
@@ -41,7 +40,7 @@ def error(message: str):
     """error(message) выводит сообщение message в появляющемся окне"""
     msgBox = QMessageBox()
     msgBox.setWindowTitle("Внимание!")
-    #message = message.split(':')[1][1:].capitalize()
+    # message = message.split(':')[1][1:].capitalize()
     msgBox.setText(message)
     msgBox.exec()
 
@@ -58,6 +57,8 @@ def setup_table(table: QtWidgets.QTableWidget, table_from: list):
     rows = len(table_from)
     columns = len(table_from[0].keys())
     headers = [x for x in table_from[0].keys()]
+
+    table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # Отключаем редактирование для всех ячеек
 
     table.setEnabled(True)
     table.setColumnCount(columns)
@@ -76,27 +77,43 @@ def setup_table(table: QtWidgets.QTableWidget, table_from: list):
         error(str(e))
 
 
-def setup_matrix(table: QtWidgets.QTableWidget, columns: int, list_headers: list, table_from: list):
+def setup_matrix(table: QtWidgets.QTableWidget, columns: int, list_headers: list, table_from: list, points: list):
     table.setEnabled(True)
     table.setRowCount(0)
     table.setColumnCount(columns)
     table.setRowCount(columns)
     table.setHorizontalHeaderLabels(list_headers)
     table.setVerticalHeaderLabels(list_headers)
+
+    table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+
     for i in range(columns):
         table.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
     try:
+        for i in range(columns):
+            for j in range(columns):
+                table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
+                if i == j:
+                    table.item(i, j).setBackground(QColor.fromRgb(100, 0, 0))
+
         for load in table_from:
-            fr, to = None, None
-            for point in self.points:
+            fr, to = -999, -999
+            for point in points:
                 if point['Имя узла'] == load['Из узла']:
                     fr = int(point['Номер'])
                 if point['Имя узла'] == load['В узел']:
                     to = int(point['Номер'])
-                if fr is not None and to is not None:
+                if fr != -999 and to != -999:
                     break
-            table.setItem(fr - 1, to - 1, QtWidgets.QTableWidgetItem(load['Объём информации(в Байт/c)']))
+            if fr != -999 and to != -999:
+                table.setItem(fr - 1, to - 1, QtWidgets.QTableWidgetItem(str(load['Объём информации(в Байт/c)'])))
+
+        for i in range(columns):
+            for j in range(columns):
+                if i != j and table.item(i, j).text() == "":
+                    table.setItem(i, j, QtWidgets.QTableWidgetItem("-"))
+
     except Exception as e:
         error(str(e))
 
@@ -114,6 +131,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.clearButton.clicked.connect(self.clear)
         self.inputButton.clicked.connect(self.open_input)
+        self.editButton.clicked.connect(self.open_edit)
 
         self.addChanelButton.setVisible(False)
         self.deleteChannelButton.setVisible(False)
@@ -126,10 +144,36 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def show_graph(self):
         G = nx.Graph()
-        #G.add_node(self.points)
+        # G.add_node(self.points)
+        for point in self.ps:
+            x, y = point['X'], point['Y']
+            name = point['Имя узла']
+            G.add_node(name, pos=(x, y))
         G.add_edges_from(self.edges)
         self.graph_widget.plot(G)
         self.plotWidget.setVisible(True)
+
+    def open_edit(self):
+        self.edit_dialog = EditDialog(self.ps, self.rs, self.chs, self.pkgs, self.loads)
+        self.edit_dialog.exec()
+        while True:
+            time.sleep(0.5)
+            if self.edit_dialog.finished:
+                break
+        to_read_info = self.edit_dialog.correct_info
+        if to_read_info:
+            self.clear()
+            self.ps = self.edit_dialog.points
+            self.rs = self.edit_dialog.routers
+            self.chs = self.edit_dialog.channels
+            self.pkgs = self.edit_dialog.packages
+            self.loads = self.edit_dialog.loads
+            self.edit_dialog.clear()
+            self.addChanelButton.setVisible(True)
+            self.deleteChannelButton.setVisible(True)
+            self.put_info(self.ps, self.rs, self.chs, self.pkgs, self.loads)
+            self.get_info(self.chs)
+            self.show_graph()
 
     def open_input(self):
         self.dialog.exec()
@@ -156,12 +200,52 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         setup_table(self.tableRouters, rs)
         setup_table(self.tableChannels, chs)
         setup_table(self.tablePackages, pkgs)
-        setup_table(self.tableUsages, loads)
+        setup_matrix(self.tableUsages, len(loads), [str(i + 1) for i in range(len(loads))], loads, self.ps)
+
+    def build_graph(self):
+        G = nx.Graph()
+        # Add nodes with attributes
+        for node_dict in self.ps:
+            node_name = node_dict['Имя узла']
+            G.add_node(node_name, X=node_dict['X'], Y=node_dict['Y'])
+        # Add edges with cost as weight
+        for channel in self.chs:
+            node1 = channel['Узел 1']
+            node2 = channel['Узел 2']
+            cost_str = channel['Стоимость']
+            try:
+                cost = float(cost_str)
+                G.add_edge(node1, node2, weight=cost)
+            except ValueError:
+                print(f"Invalid cost value: {cost_str} for edge {node1}-{node2}")
+        return G
+
+    def find_shortest_path_dijkstra(self, start_node, end_node):
+        self.graph = self.build_graph()
+        if start_node not in self.graph:
+            return f"Start node '{start_node}' not in graph."
+        if end_node not in self.graph:
+            return f"End node '{end_node}' not in graph."
+        try:
+            path = nx.dijkstra_path(self.graph, source=start_node, target=end_node, weight='weight')
+            cost = nx.dijkstra_path_length(self.graph, source=start_node, target=end_node, weight='weight')
+            return f"Shortest path: {path} with cost: {cost}"
+        except nx.NetworkXNoPath:
+            return f"No path exists between '{start_node}' and '{end_node}'."
 
     def get_info(self, ch):
         for item in ch:
             x, y = item["Узел 1"], item["Узел 2"]
-            #x, y = min(x, y), max(x, y)
+            # x_name, y_name = '', ''
+            # for tmp in self.ps:
+            #     if tmp['Имя узла'] == x:
+            #         x_name = tmp['Номер']
+            #         break
+            # for tmp in self.ps:
+            #     if tmp['Имя узла'] == y:
+            #         y_name = tmp['Номер']
+            #         break
+            # x, y = min(x, y), max(x, y)
             self.edges.append([x, y])
 
     def clear(self):
@@ -170,6 +254,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.graph_widget.ax.clear()
         self.plotWidget.setVisible(False)
         self.tableUsages.setRowCount(0)
+        self.tableUsages.setColumnCount(0)
         self.tablePoint.setRowCount(0)
         self.tableRouters.setRowCount(0)
         self.tableChannels.setRowCount(0)
@@ -273,6 +358,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.addChanelButton.setVisible(True)
             self.deleteChannelButton.setVisible(True)
 
+            error(self.find_shortest_path_dijkstra('Москва', 'Самара'))
         except Exception as e:
             error(f"Что-то пошло не так...\n {str(e)}")
 
@@ -335,6 +421,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.show_graph()
         except Exception as e:
             error(str(e))
+
+
 app = QtWidgets.QApplication(sys.argv)
 
 window = MainWindow()

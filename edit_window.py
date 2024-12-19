@@ -7,36 +7,57 @@ from PyQt6.QtWidgets import QMessageBox
 from input_window import Ui_DialogAdd
 
 
-def setup_table(table: QtWidgets.QTableWidget, columns: int, rows: int, list_headers: list):
+def setup_table(table: QtWidgets.QTableWidget, info_from: list, columns: int, rows: int, list_headers: list):
     """setup_table(table, columns, rows, list_headers) инициализирует таблицу table
        с columns стоблцами и rows рядами, а также с заголовками столбцов list_headers
     """
-    table.setEnabled(True)
-    table.setRowCount(0)
-    table.setColumnCount(columns)
-    table.setRowCount(rows)
-    table.setHorizontalHeaderLabels(list_headers)
-    for i in range(columns):
-        (table.horizontalHeader().
-         setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.ResizeToContents))
-    table.horizontalHeader().setStretchLastSection(True)
+    try:
+        table.setEnabled(True)
+        table.setColumnCount(columns)
+        table.setRowCount(rows)
+        table.setHorizontalHeaderLabels(list_headers)
+        for i in range(columns):
+            (table.horizontalHeader().
+             setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.ResizeToContents))
+            for j in range(rows):
+                table.setItem(j, i, QtWidgets.QTableWidgetItem(str(info_from[j][table.horizontalHeaderItem(i).text()])))
+        table.horizontalHeader().setStretchLastSection(True)
+    except Exception as e:
+        error(str(e))
 
 
-def setup_matrix(table: QtWidgets.QTableWidget, columns: int, list_headers: list):
+def setup_matrix(table: QtWidgets.QTableWidget, columns: int, list_headers: list, info_from: list, points: list):
     table.setEnabled(True)
     table.setRowCount(0)
     table.setColumnCount(columns)
     table.setRowCount(columns)
     table.setHorizontalHeaderLabels(list_headers)
     table.setVerticalHeaderLabels(list_headers)
+    print(info_from)
     for i in range(columns):
-        table.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        (table.horizontalHeader().
+         setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.Stretch))
         for j in range(columns):
+            table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
             if i == j:
-                table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
                 table.item(i, j).setBackground(QColor.fromRgb(100, 0, 0))
-                continue
-            table.setItem(i, j, QtWidgets.QTableWidgetItem("0"))
+
+    for load in info_from:
+        fr, to = -999, -999
+        for point in points:
+            if point['Имя узла'] == load['Из узла']:
+                fr = int(point['Номер'])
+            if point['Имя узла'] == load['В узел']:
+                to = int(point['Номер'])
+            if fr != -999 and to != -999:
+                break
+        if fr != -999 and to != -999:
+            table.setItem(fr - 1, to - 1, QtWidgets.QTableWidgetItem(str(load['Объём информации(в Байт/c)'])))
+
+    for i in range(columns):
+        for j in range(columns):
+            if i != j and table.item(i, j).text() == "":
+                table.setItem(i, j, QtWidgets.QTableWidgetItem("-"))
 
 
 def error(message: str):
@@ -76,13 +97,16 @@ def cp(table: QtWidgets.QTableWidget):
                           QtWidgets.QTableWidgetItem(table.item(row_count - 2, j).text()))
 
 
-class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
+class EditDialog(QtWidgets.QDialog, Ui_DialogAdd):
     """Окно ввода входных данных"""
 
-    def __init__(self):
-        super(InputDialog, self).__init__()
+    def __init__(self, points, routers, channels, packages, loads):
+        super(EditDialog, self).__init__()
         self.setupUi(self)
-        self.createButton.clicked.connect(self.manualCreate)
+        self.labelInput.setVisible(False)
+        self.inputNumOfPoints.setVisible(False)
+        self.createButton.setVisible(False)
+        self.checkAuto.setVisible(False)
 
         self.tablePointInput.setRowCount(0)
         self.tableLoads.setRowCount(0)
@@ -90,20 +114,24 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
         self.tableRoutersInput.setRowCount(0)
         self.tablePackagesInput.setRowCount(0)
 
-        self.points = []
-        self.edges = []
-        self.packages = []
-        self.loads = []
-        self.channels = []
-        self.routers = []
+        self.points = points
+        self.packages = packages
+        self.loads = loads
+        self.channels = channels
+        self.routers = routers
         self.correct_info = False
 
-        self.pushButton.clicked.connect(self.ready)
+        setup_table(self.tablePointInput, self.points, 3, len(self.points), ["Имя узла", "X", "Y"])
+        setup_table(self.tablePackagesInput, self.packages, 1,
+                    len(self.packages), ["Размер пакета(в байтах)"])
+        setup_table(self.tableChannelsInput, self.channels, 4,
+                    len(self.channels), ["Узел 1", "Узел 2", "Пропускная способность", "Стоимость"])
+        setup_table(self.tableRoutersInput, self.routers, 3,
+                    len(self.routers), ["Модель", "Пропускная способность", "Стоимость"])
+        setup_matrix(self.tableLoads, len(self.points), [str(i + 1) for i in range(len(self.points))],
+                     self.loads, self.points)
 
-        # реализация Добавления, удаления и копирования в таблицах для входных данных
-        # self.addButtonLoads.clicked.connect(lambda: load(self.tableLoads))
-        # self.deleteButtonLoads.clicked.connect(lambda: rm(self.tableLoads))
-        # self.copyButtonLoads.clicked.connect(lambda: cp(self.tableLoads))
+        self.pushButton.clicked.connect(self.ready)
 
         self.addButtonPackages.clicked.connect(lambda: load(self.tablePackagesInput))
         self.deleteButtonPackages.clicked.connect(lambda: rm(self.tablePackagesInput))
@@ -117,72 +145,15 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
         self.deleteButtonRouters.clicked.connect(lambda: rm(self.tableRoutersInput))
         self.copyButtonRouters.clicked.connect(lambda: cp(self.tableRoutersInput))
 
-    def manualCreate(self):
-        """Ручное добавление данных"""
-        n = self.inputNumOfPoints.text()
-        if not is_number(n):
-            error("[manualCreate]: введёно не число")
-            return
-        n = int(n)
-        if n <= 0:
-            error("[manualCreate]: число узлов не может быть меньше или равно нулю!")
-            return
-        if self.checkAuto.isChecked():
-            self.autoCreate(n)
-            return
-
-        setup_table(self.tablePointInput,
-                    3, n, ["Имя узла", "X", "Y"])
-        setup_matrix(self.tableLoads,
-                     n, [str(i + 1) for i in range(n)])
-        setup_table(self.tablePackagesInput,
-                    1, 1, ["Размер пакета(в байтах)"])
-        setup_table(self.tableChannelsInput,
-                    4, 1, ["Узел 1", "Узел 2", "Пропускная способность", "Стоимость"])
-        setup_table(self.tableRoutersInput,
-                    3, 1, ["Модель", "Пропускная способность", "Стоимость"])
-
-    def autoCreate(self, n: int):
-        setup_table(self.tablePointInput,
-                    3, n, ["Имя узла", "X", "Y"])
-        setup_matrix(self.tableLoads,
-                     n, [str(i + 1) for i in range(n)])
-        setup_table(self.tablePackagesInput,
-                    1, 1, ["Размер пакета(в байтах)"])
-        setup_table(self.tableChannelsInput,
-                    4, 1, ["Узел 1", "Узел 2", "Пропускная способность", "Стоимость"])
-        setup_table(self.tableRoutersInput,
-                    3, 1, ["Модель", "Пропускная способность", "Стоимость"])
-
-        xs = [(random.randint(-n, n), random.randint(-n, n)) for _ in range(n)]
-        # защита от повторяющихся данных
-        xs = list(set(xs))
-        while len(xs) < n:
-            to_add = (random.randint(-n, n), random.randint(-n, n))
-            if to_add not in xs:
-                xs.append((random.randint(-n, n), random.randint(-n, n)))
-
-        edges = []
-        for i in range(len(xs) - 1):
-            edges.append((i + 1, i + 2))
-
-        price_default = "10"
-        rate_default = "256"
-        for i, (x, y) in enumerate(xs):
-            self.tablePointInput.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
-            self.tablePointInput.setItem(i, 1, QtWidgets.QTableWidgetItem(str(x)))
-            self.tablePointInput.setItem(i, 2, QtWidgets.QTableWidgetItem(str(y)))
-        for i, (x, y) in enumerate(edges):
-            if i != 0:
-                self.tableChannelsInput.insertRow(i)
-            self.tableChannelsInput.setItem(i, 0, QtWidgets.QTableWidgetItem(str(x)))
-            self.tableChannelsInput.setItem(i, 1, QtWidgets.QTableWidgetItem(str(y)))
-            self.tableChannelsInput.setItem(i, 2, QtWidgets.QTableWidgetItem(rate_default))
-            self.tableChannelsInput.setItem(i, 3, QtWidgets.QTableWidgetItem(price_default))
-
     def ready(self):
         try:
             names_of_points = []
+
+            self.points = []
+            self.packages = []
+            self.loads = []
+            self.channels = []
+            self.routers = []
 
             row_count = self.tablePointInput.rowCount()
             column_count = self.tablePointInput.columnCount()
@@ -235,7 +206,7 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                 tmp = dict()
                 for j in range(column_count):
                     v = self.tableLoads.item(i, j).text()
-                    if v == '0':
+                    if v == '0' or v == '-':
                         continue
                     if is_number(v):
                         if int(v) <= 0:
@@ -322,9 +293,6 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
             print(str(e))
 
     def clear(self):
-        self.inputNumOfPoints.clear()
-        self.checkAuto.setChecked(False)
-
         self.tablePointInput.setRowCount(0)
         self.tableLoads.setRowCount(0)
         self.tableChannelsInput.setRowCount(0)
@@ -332,7 +300,6 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
         self.tablePackagesInput.setRowCount(0)
 
         self.points = []
-        self.edges = []
         self.packages = []
         self.loads = []
         self.channels = []

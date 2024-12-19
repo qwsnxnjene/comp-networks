@@ -29,7 +29,7 @@
      <rect>
       <x>510</x>
       <y>0</y>
-      <width>231</width>
+      <width>160</width>
       <height>41</height>
      </rect>
     </property>
@@ -211,14 +211,27 @@
    <widget class="QPushButton" name="clearButton">
     <property name="geometry">
      <rect>
-      <x>750</x>
+      <x>670</x>
       <y>0</y>
-      <width>231</width>
+      <width>160</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string>Сброс</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="editButton">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>0</y>
+      <width>151</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Редактировать данные</string>
     </property>
    </widget>
    <zorder>plotWidget</zorder>
@@ -236,6 +249,7 @@
    <zorder>tableChannels</zorder>
    <zorder>tablePoint</zorder>
    <zorder>clearButton</zorder>
+   <zorder>editButton</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -243,7 +257,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menufgh">
