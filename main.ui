@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1000</width>
-    <height>824</height>
+    <height>808</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,32 +55,6 @@
       <width>471</width>
       <height>161</height>
      </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="addChanelButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>510</y>
-      <width>240</width>
-      <height>50</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Добавить канал</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="deleteChannelButton">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>510</y>
-      <width>240</width>
-      <height>50</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Удалить канал</string>
     </property>
    </widget>
    <widget class="QTableWidget" name="tableChannels">
@@ -154,7 +128,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>570</y>
+      <y>490</y>
       <width>201</width>
       <height>41</height>
      </rect>
@@ -173,9 +147,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>600</y>
+      <y>520</y>
       <width>501</width>
-      <height>161</height>
+      <height>241</height>
      </rect>
     </property>
    </widget>
@@ -236,8 +210,6 @@
    </widget>
    <zorder>plotWidget</zorder>
    <zorder>inputButton</zorder>
-   <zorder>addChanelButton</zorder>
-   <zorder>deleteChannelButton</zorder>
    <zorder>labelInput</zorder>
    <zorder>labelInput_2</zorder>
    <zorder>labelInput_3</zorder>

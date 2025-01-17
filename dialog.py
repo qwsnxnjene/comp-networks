@@ -2,7 +2,7 @@ import random
 
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem
 
 from input_window import Ui_DialogAdd
 
@@ -86,9 +86,6 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
 
         self.tablePointInput.setRowCount(0)
         self.tableLoads.setRowCount(0)
-        self.tableChannelsInput.setRowCount(0)
-        self.tableRoutersInput.setRowCount(0)
-        self.tablePackagesInput.setRowCount(0)
 
         self.points = []
         self.edges = []
@@ -100,22 +97,16 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
 
         self.pushButton.clicked.connect(self.ready)
 
+        self.tableLoads.cellChanged.connect(self.on_cell_changed)
+
         # реализация Добавления, удаления и копирования в таблицах для входных данных
         # self.addButtonLoads.clicked.connect(lambda: load(self.tableLoads))
         # self.deleteButtonLoads.clicked.connect(lambda: rm(self.tableLoads))
         # self.copyButtonLoads.clicked.connect(lambda: cp(self.tableLoads))
 
-        self.addButtonPackages.clicked.connect(lambda: load(self.tablePackagesInput))
-        self.deleteButtonPackages.clicked.connect(lambda: rm(self.tablePackagesInput))
-        self.copyButtonPackages.clicked.connect(lambda: cp(self.tablePackagesInput))
-
-        self.addButtonChannels.clicked.connect(lambda: load(self.tableChannelsInput))
-        self.deleteButtonChannels.clicked.connect(lambda: rm(self.tableChannelsInput))
-        self.copyButtonChannels.clicked.connect(lambda: cp(self.tableChannelsInput))
-
-        self.addButtonRouters.clicked.connect(lambda: load(self.tableRoutersInput))
-        self.deleteButtonRouters.clicked.connect(lambda: rm(self.tableRoutersInput))
-        self.copyButtonRouters.clicked.connect(lambda: cp(self.tableRoutersInput))
+        self.addButtonPackages.clicked.connect(lambda: load(self.tablePointInput))
+        self.deleteButtonPackages.clicked.connect(lambda: rm(self.tablePointInput))
+        self.copyButtonPackages.clicked.connect(lambda: cp(self.tablePointInput))
 
     def manualCreate(self):
         """Ручное добавление данных"""
@@ -135,24 +126,12 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                     3, n, ["Имя узла", "X", "Y"])
         setup_matrix(self.tableLoads,
                      n, [str(i + 1) for i in range(n)])
-        setup_table(self.tablePackagesInput,
-                    1, 1, ["Размер пакета(в байтах)"])
-        setup_table(self.tableChannelsInput,
-                    4, 1, ["Узел 1", "Узел 2", "Пропускная способность", "Стоимость"])
-        setup_table(self.tableRoutersInput,
-                    3, 1, ["Модель", "Пропускная способность", "Стоимость"])
 
     def autoCreate(self, n: int):
         setup_table(self.tablePointInput,
                     3, n, ["Имя узла", "X", "Y"])
         setup_matrix(self.tableLoads,
                      n, [str(i + 1) for i in range(n)])
-        setup_table(self.tablePackagesInput,
-                    1, 1, ["Размер пакета(в байтах)"])
-        setup_table(self.tableChannelsInput,
-                    4, 1, ["Узел 1", "Узел 2", "Пропускная способность", "Стоимость"])
-        setup_table(self.tableRoutersInput,
-                    3, 1, ["Модель", "Пропускная способность", "Стоимость"])
 
         xs = [(random.randint(-n, n), random.randint(-n, n)) for _ in range(n)]
         # защита от повторяющихся данных
@@ -172,13 +151,31 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
             self.tablePointInput.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
             self.tablePointInput.setItem(i, 1, QtWidgets.QTableWidgetItem(str(x)))
             self.tablePointInput.setItem(i, 2, QtWidgets.QTableWidgetItem(str(y)))
-        for i, (x, y) in enumerate(edges):
-            if i != 0:
-                self.tableChannelsInput.insertRow(i)
-            self.tableChannelsInput.setItem(i, 0, QtWidgets.QTableWidgetItem(str(x)))
-            self.tableChannelsInput.setItem(i, 1, QtWidgets.QTableWidgetItem(str(y)))
-            self.tableChannelsInput.setItem(i, 2, QtWidgets.QTableWidgetItem(rate_default))
-            self.tableChannelsInput.setItem(i, 3, QtWidgets.QTableWidgetItem(price_default))
+        # for i, (x, y) in enumerate(edges):
+        #     if i != 0:
+        #         self.tableChannelsInput.insertRow(i)
+        #     self.tableChannelsInput.setItem(i, 0, QtWidgets.QTableWidgetItem(str(x)))
+        #     self.tableChannelsInput.setItem(i, 1, QtWidgets.QTableWidgetItem(str(y)))
+        #     self.tableChannelsInput.setItem(i, 2, QtWidgets.QTableWidgetItem(rate_default))
+        #     self.tableChannelsInput.setItem(i, 3, QtWidgets.QTableWidgetItem(price_default))
+
+    def on_cell_changed(self, row, col):
+        # Получаем значение из измененной ячейки
+        item = self.tableLoads.item(row, col)
+        if item:
+            value = item.text()
+
+            # Устанавливаем симметричное значение
+            symmetric_item = self.tableLoads.item(col, row)
+            if not symmetric_item:
+                symmetric_item = QTableWidgetItem()
+                self.tableLoads.setItem(col, row, symmetric_item)
+            symmetric_item.setText(value)
+
+            # Блокируем сигналы, чтобы избежать рекурсии
+            self.tableLoads.blockSignals(True)
+            symmetric_item.setText(value)
+            self.tableLoads.blockSignals(False)
 
     def ready(self):
         try:
@@ -210,24 +207,6 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                 tmp['Номер'] = str(i + 1)
                 self.points.append(tmp)
 
-            # Проверка Списка пакетов
-            row_count = self.tablePackagesInput.rowCount()
-            column_count = self.tablePackagesInput.columnCount()
-            for i in range(row_count):
-                tmp = dict()
-                for j in range(column_count):
-                    v = self.tablePackagesInput.item(i, j).text()
-                    if is_number(v):
-                        if int(v) <= 0:
-                            error(
-                                f"Неверный формат информации о пакетах!\n Отрицательный размер пакета! Строка {i + 1}")
-                            return
-                        tmp[self.tablePackagesInput.horizontalHeaderItem(j).text()] = int(v)
-                    else:
-                        error(f"Неверный формат информации о пакетах! Строка {i + 1}")
-                        return
-                self.packages.append(tmp)
-
             # Проверка Матрицы нагрузки
             row_count = self.tableLoads.rowCount()
             column_count = self.tableLoads.columnCount()
@@ -235,10 +214,8 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                 tmp = dict()
                 for j in range(column_count):
                     v = self.tableLoads.item(i, j).text()
-                    if v == '0':
-                        continue
                     if is_number(v):
-                        if int(v) <= 0:
+                        if int(v) < 0:
                             error(f"Отрицательный объём информации в {i + 1} строке {j + 1} столбце матрицы нагрузки")
                             return
                         tmp['Из узла'] = [point['Имя узла'] for point in self.points if point['Номер'] == str(i + 1)][0]
@@ -251,75 +228,10 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                         return
                     self.loads.append(tmp)
                     tmp = dict()
-
-            # Проверка Информации о каналах
-            row_count = self.tableChannelsInput.rowCount()
-            column_count = self.tableChannelsInput.columnCount()
-            channels_name = []
-            for i in range(row_count):
-                tmp = dict()
-                for j in range(column_count):
-                    v = self.tableChannelsInput.item(i, j).text()
-                    if j > 1:
-                        if is_number(v):
-                            if int(v) <= 0:
-                                error(f"Отрицательная {self.tableChannelsInput.horizontalHeaderItem(j).text()}"
-                                      f" в {i + 1} строке информации о каналах!")
-                                return
-                            tmp[self.tableChannelsInput.horizontalHeaderItem(j).text()] = v
-                        else:
-                            error(f"Некорректная {self.tableChannelsInput.horizontalHeaderItem(j).text()} "
-                                  f"в {i + 1} строке информации о каналах!")
-                            return
-                    else:
-                        if v not in names_of_points:
-                            error(f"Узла, указанного в {i + 1} строке информации о каналах нет в списке узлов")
-                            return
-                        tmp[self.tableChannelsInput.horizontalHeaderItem(j).text()] = v
-
-                edge = (tmp["Узел 1"], tmp["Узел 2"])
-                if edge in channels_name:
-                    error("Каналы не могут дублироваться!")
-                    return
-                if tmp["Узел 1"] == tmp["Узел 2"]:
-                    error("Канал не может начинаться и заканчиваться в одном и том же узле")
-                    return
-                channels_name.append(edge)
-                self.channels.append(tmp)
-
-            # Проверка Доступных маршрутизаторов
-            row_count = self.tableRoutersInput.rowCount()
-            column_count = self.tableRoutersInput.columnCount()
-            names = []
-            for i in range(row_count):
-                tmp = dict()
-                for j in range(column_count):
-                    v = self.tableRoutersInput.item(i, j).text()
-                    if j != 0:
-                        if is_number(v):
-                            if int(v) <= 0:
-                                error(f"Отрицательная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
-                                      f" в {i + 1} строке доступных маршрутизаторов!")
-                                return
-                            tmp[self.tableRoutersInput.horizontalHeaderItem(j).text()] = v
-                        else:
-                            error(f"Некорректная {self.tableRoutersInput.horizontalHeaderItem(j).text()}"
-                                  f" в {i + 1} строке доступных маршрутизаторов!")
-                            return
-                    else:
-                        if len(v) == 0:
-                            error("Название модели маршрутизатора не может быть пустым!")
-                            return
-                        if v in names:
-                            error("Название модели маршрутизатора не может дублироваться!")
-                            return
-                        names.append(v)
-                        tmp[self.tableRoutersInput.horizontalHeaderItem(j).text()] = v
-                self.routers.append(tmp)
-                self.correct_info = True
-                self.close()
+            self.correct_info = True
+            self.close()
         except Exception as e:
-            print(str(e))
+            error(str(e))
 
     def clear(self):
         self.inputNumOfPoints.clear()
@@ -327,9 +239,6 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
 
         self.tablePointInput.setRowCount(0)
         self.tableLoads.setRowCount(0)
-        self.tableChannelsInput.setRowCount(0)
-        self.tableRoutersInput.setRowCount(0)
-        self.tablePackagesInput.setRowCount(0)
 
         self.points = []
         self.edges = []

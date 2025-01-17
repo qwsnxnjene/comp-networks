@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file '.\main.ui'
+# Form implementation generated from reading ui file 'main.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #
@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1000, 824)
+        MainWindow.resize(1000, 808)
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.plotWidget = QtWidgets.QWidget(parent=self.centralwidget)
@@ -31,12 +31,6 @@ class Ui_MainWindow(object):
         self.tableRouters.setObjectName("tableRouters")
         self.tableRouters.setColumnCount(0)
         self.tableRouters.setRowCount(0)
-        self.addChanelButton = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.addChanelButton.setGeometry(QtCore.QRect(10, 510, 240, 50))
-        self.addChanelButton.setObjectName("addChanelButton")
-        self.deleteChannelButton = QtWidgets.QPushButton(parent=self.centralwidget)
-        self.deleteChannelButton.setGeometry(QtCore.QRect(260, 510, 240, 50))
-        self.deleteChannelButton.setObjectName("deleteChannelButton")
         self.tableChannels = QtWidgets.QTableWidget(parent=self.centralwidget)
         self.tableChannels.setGeometry(QtCore.QRect(510, 600, 471, 161))
         self.tableChannels.setObjectName("tableChannels")
@@ -64,14 +58,14 @@ class Ui_MainWindow(object):
         self.labelInput_3.setFont(font)
         self.labelInput_3.setObjectName("labelInput_3")
         self.labelInput_4 = QtWidgets.QLabel(parent=self.centralwidget)
-        self.labelInput_4.setGeometry(QtCore.QRect(0, 570, 201, 41))
+        self.labelInput_4.setGeometry(QtCore.QRect(0, 490, 201, 41))
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
         self.labelInput_4.setFont(font)
         self.labelInput_4.setObjectName("labelInput_4")
         self.tableUsages = QtWidgets.QTableWidget(parent=self.centralwidget)
-        self.tableUsages.setGeometry(QtCore.QRect(0, 600, 501, 161))
+        self.tableUsages.setGeometry(QtCore.QRect(0, 520, 501, 241))
         self.tableUsages.setObjectName("tableUsages")
         self.tableUsages.setColumnCount(0)
         self.tableUsages.setRowCount(0)
@@ -95,8 +89,6 @@ class Ui_MainWindow(object):
         self.editButton.setObjectName("editButton")
         self.plotWidget.raise_()
         self.inputButton.raise_()
-        self.addChanelButton.raise_()
-        self.deleteChannelButton.raise_()
         self.labelInput.raise_()
         self.labelInput_2.raise_()
         self.labelInput_3.raise_()
@@ -135,8 +127,6 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Система проектирования сети"))
         self.inputButton.setText(_translate("MainWindow", "Ввести входные данные"))
-        self.addChanelButton.setText(_translate("MainWindow", "Добавить канал"))
-        self.deleteChannelButton.setText(_translate("MainWindow", "Удалить канал"))
         self.labelInput.setText(_translate("MainWindow", "Таблица узлов:"))
         self.labelInput_2.setText(_translate("MainWindow", "Таблица маршрутизаторов:"))
         self.labelInput_3.setText(_translate("MainWindow", "Таблица каналов связи:"))

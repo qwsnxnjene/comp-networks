@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>542</width>
-    <height>761</height>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -107,79 +107,9 @@
     <rect>
      <x>10</x>
      <y>260</y>
-     <width>251</width>
-     <height>111</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QTableWidget" name="tableRoutersInput">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>550</y>
      <width>431</width>
-     <height>161</height>
+     <height>231</height>
     </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelInput_4">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>370</y>
-     <width>161</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Информация о каналах</string>
-   </property>
-  </widget>
-  <widget class="QTableWidget" name="tableChannelsInput">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>410</y>
-     <width>431</width>
-     <height>111</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelInput_5">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>520</y>
-     <width>201</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Доступные маршрутизаторы</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="checkAuto">
@@ -206,54 +136,6 @@
    </property>
    <property name="text">
     <string>Создать</string>
-   </property>
-  </widget>
-  <widget class="QTableWidget" name="tablePackagesInput">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>280</x>
-     <y>260</y>
-     <width>161</width>
-     <height>141</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelInput_6">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>280</x>
-     <y>230</y>
-     <width>131</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Список пакетов:</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton">
-   <property name="geometry">
-    <rect>
-     <x>150</x>
-     <y>720</y>
-     <width>231</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Готово</string>
    </property>
   </widget>
   <widget class="QPushButton" name="copyButtonPackages">
@@ -295,108 +177,31 @@
     <string>Добавить</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="addButtonChannels">
+  <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>450</x>
-     <y>410</y>
-     <width>75</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Добавить</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="copyButtonChannels">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
+     <x>200</x>
      <y>500</y>
-     <width>75</width>
-     <height>23</height>
+     <width>171</width>
+     <height>51</height>
     </rect>
    </property>
    <property name="text">
-    <string>Копировать</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="deleteButtonChannels">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>452</y>
-     <width>75</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Удалить</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="deleteButtonRouters">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>591</y>
-     <width>75</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Удалить</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="copyButtonRouters">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>639</y>
-     <width>75</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Копировать</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="addButtonRouters">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>549</y>
-     <width>75</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Добавить</string>
+    <string>Готово</string>
    </property>
   </widget>
   <zorder>labelInput</zorder>
   <zorder>inputNumOfPoints</zorder>
   <zorder>labelInput_2</zorder>
   <zorder>labelInput_3</zorder>
-  <zorder>labelInput_4</zorder>
-  <zorder>labelInput_5</zorder>
   <zorder>checkAuto</zorder>
   <zorder>createButton</zorder>
-  <zorder>labelInput_6</zorder>
-  <zorder>pushButton</zorder>
-  <zorder>tablePackagesInput</zorder>
-  <zorder>tableChannelsInput</zorder>
   <zorder>tableLoads</zorder>
-  <zorder>tableRoutersInput</zorder>
   <zorder>tablePointInput</zorder>
   <zorder>copyButtonPackages</zorder>
   <zorder>deleteButtonPackages</zorder>
   <zorder>addButtonPackages</zorder>
-  <zorder>addButtonChannels</zorder>
-  <zorder>copyButtonChannels</zorder>
-  <zorder>deleteButtonChannels</zorder>
-  <zorder>deleteButtonRouters</zorder>
-  <zorder>copyButtonRouters</zorder>
-  <zorder>addButtonRouters</zorder>
+  <zorder>pushButton</zorder>
  </widget>
  <resources/>
  <connections/>
