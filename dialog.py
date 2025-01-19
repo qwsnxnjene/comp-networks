@@ -86,6 +86,7 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
 
         self.tablePointInput.setRowCount(0)
         self.tableLoads.setRowCount(0)
+        self.tableChannels.setRowCount(0)
 
         self.points = []
         self.edges = []
@@ -98,6 +99,7 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
         self.pushButton.clicked.connect(self.ready)
 
         self.tableLoads.cellChanged.connect(self.on_cell_changed)
+        self.tableChannels.cellChanged.connect(self.on_channel_cell_changed)
 
         # реализация Добавления, удаления и копирования в таблицах для входных данных
         # self.addButtonLoads.clicked.connect(lambda: load(self.tableLoads))
@@ -126,12 +128,14 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                     3, n, ["Имя узла", "X", "Y"])
         setup_matrix(self.tableLoads,
                      n, [str(i + 1) for i in range(n)])
+        setup_matrix(self.tableChannels, n, [str(i + 1) for i in range(n)])
 
     def autoCreate(self, n: int):
         setup_table(self.tablePointInput,
                     3, n, ["Имя узла", "X", "Y"])
         setup_matrix(self.tableLoads,
                      n, [str(i + 1) for i in range(n)])
+        setup_matrix(self.tableChannels, n, [str(i + 1) for i in range(n)])
 
         xs = [(random.randint(-n, n), random.randint(-n, n)) for _ in range(n)]
         # защита от повторяющихся данных
@@ -177,6 +181,30 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
             symmetric_item.setText(value)
             self.tableLoads.blockSignals(False)
 
+    def on_channel_cell_changed(self, row, col):
+        # Получаем значение из измененной ячейки
+        item = self.tableChannels.item(row, col)
+        if item:
+            value = item.text()
+
+            # Проверяем, что введено 0 или 1
+            if value not in {"0", "1", ""}:
+                error("Введите только 0 или 1!")
+                item.setText("0")  # Сбрасываем значение на 0
+                return
+
+            # Устанавливаем симметричное значение
+            symmetric_item = self.tableChannels.item(col, row)
+            if not symmetric_item:
+                symmetric_item = QTableWidgetItem()
+                self.tableChannels.setItem(col, row, symmetric_item)
+            symmetric_item.setText(value)
+
+            # Блокируем сигналы, чтобы избежать рекурсии
+            self.tableChannels.blockSignals(True)
+            symmetric_item.setText(value)
+            self.tableChannels.blockSignals(False)
+
     def ready(self):
         try:
             names_of_points = []
@@ -207,12 +235,11 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                 tmp['Номер'] = str(i + 1)
                 self.points.append(tmp)
 
-            # Проверка Матрицы нагрузки
             row_count = self.tableLoads.rowCount()
             column_count = self.tableLoads.columnCount()
             for i in range(row_count):
                 tmp = dict()
-                for j in range(column_count):
+                for j in range(i + 1, column_count):
                     v = self.tableLoads.item(i, j).text()
                     if is_number(v):
                         if int(v) < 0:
@@ -220,7 +247,7 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                             return
                         tmp['Из узла'] = [point['Имя узла'] for point in self.points if point['Номер'] == str(i + 1)][0]
                         tmp['В узел'] = [point['Имя узла'] for point in self.points if point['Номер'] == str(j + 1)][0]
-                        tmp['Объём информации(в Байт/c)'] = int(v)
+                        tmp['Объём информации(в Бит/c)'] = int(v)
                     elif v == '':
                         continue
                     else:
@@ -228,6 +255,23 @@ class InputDialog(QtWidgets.QDialog, Ui_DialogAdd):
                         return
                     self.loads.append(tmp)
                     tmp = dict()
+
+            # Проверка Матрицы нагрузки
+            row_count = self.tableChannels.rowCount()
+            column_count = self.tableChannels.columnCount()
+            for i in range(row_count):
+                for j in range(i + 1, column_count):  # Обрабатываем только верхний треугольник матрицы
+                    v = self.tableChannels.item(i, j).text()
+                    if v == "1":  # Добавляем только каналы с связью
+                        tmp = {
+                            'Из узла': [point['Имя узла'] for point in self.points if point['Номер'] == str(i + 1)][0],
+                            'В узел': [point['Имя узла'] for point in self.points if point['Номер'] == str(j + 1)][0],
+                            'Связь': int(v)
+                        }
+                        self.channels.append(tmp)
+                    elif v not in {"0", ""}:  # Проверяем, что введено допустимое значение
+                        error(f"Некорректное значение связи в {i + 1} строке {j + 1} столбце матрицы каналов")
+                        return
             self.correct_info = True
             self.close()
         except Exception as e:

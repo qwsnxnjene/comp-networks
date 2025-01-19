@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>542</width>
-    <height>560</height>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -180,14 +180,49 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>500</y>
+     <x>180</x>
+     <y>740</y>
      <width>171</width>
      <height>51</height>
     </rect>
    </property>
    <property name="text">
     <string>Готово</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelInput_4">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>490</y>
+     <width>281</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Матрица каналов(0 - канал есть, 1 - нет)</string>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="tableChannels">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>520</y>
+     <width>431</width>
+     <height>201</height>
+    </rect>
    </property>
   </widget>
   <zorder>labelInput</zorder>
@@ -202,6 +237,8 @@
   <zorder>deleteButtonPackages</zorder>
   <zorder>addButtonPackages</zorder>
   <zorder>pushButton</zorder>
+  <zorder>labelInput_4</zorder>
+  <zorder>tableChannels</zorder>
  </widget>
  <resources/>
  <connections/>
