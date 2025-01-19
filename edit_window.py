@@ -229,10 +229,8 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogAdd):
             names_of_points = []
 
             self.points = []
-            self.packages = []
             self.loads = []
             self.channels = []
-            self.routers = []
 
             row_count = self.tablePointInput.rowCount()
             column_count = self.tablePointInput.columnCount()

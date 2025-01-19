@@ -1,222 +1,18 @@
-import math
+
 import sys
 import time
 import json
 
-import matplotlib.pyplot as plt
 import networkx as nx
 from PyQt6 import QtWidgets
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QMessageBox, QAbstractItemView
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QComboBox, QTableWidget, QTabWidget, QWidget, QTableWidgetItem
 
+import graph_class
+import utils
+from configuration_viewer import ConfigurationViewer
 from dialog import InputDialog
 from edit_window import EditDialog
 from main_window import Ui_MainWindow
-from collections import deque
-
-
-def choose_least_loaded_path(graph, start, end, channel_flows):
-    """
-    Выбирает наименее загруженный кратчайший путь между start и end.
-    """
-    shortest_paths = find_shortest_paths(graph, start, end)
-    if not shortest_paths:
-        return None
-
-    # Выбираем путь с минимальной суммарной загрузкой
-    min_load = float('inf')
-    best_path = None
-
-    for path in shortest_paths:
-        total_load = 0
-        for i in range(len(path) - 1):
-            node1, node2 = path[i], path[i + 1]
-            edge = tuple(sorted([node1, node2]))
-            total_load += channel_flows.get(edge, 0)
-
-        if total_load < min_load:
-            min_load = total_load
-            best_path = path
-
-    return best_path
-
-
-def find_shortest_paths(graph, start, end):
-    """
-    Находит все кратчайшие пути между start и end в графе graph.
-    """
-    queue = deque([(start, [start])])
-    shortest_paths = []
-    shortest_length = None
-
-    while queue:
-        current_node, path = queue.popleft()
-        if current_node == end:
-            if shortest_length is None:
-                shortest_length = len(path)
-            if len(path) == shortest_length:
-                shortest_paths.append(path)
-            continue
-
-        for neighbor in graph.neighbors(current_node):
-            if neighbor not in path:
-                queue.append((neighbor, path + [neighbor]))
-
-    return shortest_paths
-
-
-def calculate_node_flows(graph, channel_flows):
-    """
-    Вычисляет сумму потоков, проходящих через каждый узел.
-    """
-    node_flows = {node: 0 for node in graph.nodes}  # Инициализируем словарь
-
-    for edge, flow in channel_flows.items():
-        node1, node2 = edge
-        node_flows[node1] += flow
-        node_flows[node2] += flow
-
-    return node_flows
-
-
-def calculate_channel_flows(graph, loads):
-    """
-    Рассчитывает поток для каждого канала, выбирая один кратчайший путь.
-    """
-    channel_flows = {}  # Словарь: (узел1, узел2) -> сумма потоков
-
-    for load in loads:
-        start = load['Из узла']
-        end = load['В узел']
-        flow = load['Объём информации(в Бит/c)']
-
-        # Выбираем наименее загруженный кратчайший путь
-        path = choose_least_loaded_path(graph, start, end, channel_flows)
-        if not path:
-            continue  # Если путь не найден, пропускаем
-
-        # Увеличиваем загрузку каналов на выбранном пути
-        for i in range(len(path) - 1):
-            node1, node2 = path[i], path[i + 1]
-            edge = tuple(sorted([node1, node2]))  # Упорядочиваем рёбра для уникальности
-            if edge not in channel_flows:
-                channel_flows[edge] = 0
-            channel_flows[edge] += flow
-
-    return channel_flows
-
-
-class GraphWidget(FigureCanvas):
-    """Граф"""
-
-    def __init__(self, parent=None):
-        fig = plt.figure(figsize=(5, 5))
-        super(GraphWidget, self).__init__(fig)
-        self.ax = fig.add_subplot(111)
-        self.setParent(parent)
-
-    def plot(self, graph: nx.Graph, pos: dict, edge_labels: dict = None, node_labels: dict = None):
-        """plot(graph) отображает граф graph с подписями на рёбрах и узлах"""
-        self.ax.clear()
-
-        # Отрисовка графа
-        nx.draw(graph, pos, ax=self.ax, with_labels=True, node_color='skyblue',
-                node_size=800, font_size=10, font_color='darkgreen', edge_color='black')
-
-        # Добавление подписей на рёбра
-        if edge_labels:
-            nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, ax=self.ax,
-                                         font_color='red', font_size=8)
-
-        # Добавление дополнительных подписей для узлов
-        if node_labels:
-            nx.draw_networkx_labels(graph, pos, labels=node_labels, ax=self.ax,
-                                    font_size=8, font_color='blue', verticalalignment='bottom')
-
-        self.draw()
-
-
-def error(message: str):
-    """error(message) выводит сообщение message в появляющемся окне"""
-    msgBox = QMessageBox()
-    msgBox.setWindowTitle("Внимание!")
-    msgBox.setText(message)
-    msgBox.exec()
-
-
-def is_number(n: str):
-    """is_number(n) Проверяет, является ли n числом"""
-    if len(n) == 0 or (n[0] == '-' and any(x.isdigit() is False for x in n[1:])
-                       or (n[0] != '-' and any(x.isdigit() is False for x in n))):
-        return False
-    return True
-
-
-def setup_table(table: QtWidgets.QTableWidget, table_from: list):
-    rows = len(table_from)
-    columns = len(table_from[0].keys())
-    headers = [x for x in table_from[0].keys()]
-
-    table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # Отключаем редактирование для всех ячеек
-
-    table.setEnabled(True)
-    table.setColumnCount(columns)
-    table.setRowCount(rows)
-    table.setHorizontalHeaderLabels(headers)
-    for i in range(columns):
-        (table.horizontalHeader().
-         setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.ResizeToContents))
-    table.horizontalHeader().setStretchLastSection(True)
-
-    try:
-        for i in range(rows):
-            for j, h in enumerate(headers):
-                table.setItem(i, j, QtWidgets.QTableWidgetItem(str(table_from[i][h])))
-    except Exception as e:
-        error(str(e))
-
-
-def setup_matrix(table: QtWidgets.QTableWidget, columns: int, list_headers: list, table_from: list, points: list):
-    table.setEnabled(True)
-    table.setRowCount(0)
-    table.setColumnCount(columns)
-    table.setRowCount(columns)
-    table.setHorizontalHeaderLabels(list_headers)
-    table.setVerticalHeaderLabels(list_headers)
-
-    table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-
-    for i in range(columns):
-        table.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeMode.Stretch)
-
-    try:
-        for i in range(columns):
-            for j in range(columns):
-                table.setItem(i, j, QtWidgets.QTableWidgetItem(""))
-                if i == j:
-                    table.item(i, j).setBackground(QColor.fromRgb(100, 0, 0))
-
-        for load in table_from:
-            fr, to = -999, -999
-            for point in points:
-                if point['Имя узла'] == load['Из узла']:
-                    fr = int(point['Номер'])
-                if point['Имя узла'] == load['В узел']:
-                    to = int(point['Номер'])
-                if fr != -999 and to != -999:
-                    break
-            if fr != -999 and to != -999:
-                table.setItem(fr - 1, to - 1, QtWidgets.QTableWidgetItem(str(load['Объём информации(в Бит/c)'])))
-                table.setItem(to - 1, fr - 1, QtWidgets.QTableWidgetItem(str(load['Объём информации(в Бит/c)'])))
-
-        for i in range(columns):
-            for j in range(columns):
-                if i != j and table.item(i, j).text() == "":
-                    table.setItem(i, j, QtWidgets.QTableWidgetItem("-"))
-
-    except Exception as e:
-        error(str(e))
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -224,7 +20,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
         self.plotWidget.setVisible(False)
-        self.graph_widget = GraphWidget(self.plotWidget)
+        self.graph_widget = graph_class.GraphWidget(self.plotWidget)
 
         self.dialog = InputDialog()
         self.edges = []
@@ -238,7 +34,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             {'Модель': 'Cisco XYZ', 'Стоимость': '30000 рублей', 'Пропускная способность': '5000 бит/c'},
             # Новый маршрутизатор
         ]
-        setup_table(self.tableRouters, self.rs)
+        utils.setup_table(self.tableRouters, self.rs)
         self.chs = [
             {'Канал': 'Ethernet 100 бит/с', 'Пропускная способность': '100 бит/c',
              'Стоимость аренды': '2000 рублей/месяц'},
@@ -252,14 +48,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             {'Канал': 'Оптоволокно 1000 бит/с', 'Пропускная способность': '1000 бит/c',
              'Стоимость аренды': '20000 рублей/месяц'},  # Новый канал
         ]
-        setup_table(self.tableChannels, self.chs)
+        utils.setup_table(self.tableChannels, self.chs)
         self.pkgs = [
             {'Размер пакета': '16 бит'},
             {'Размер пакета': '64 бит'},
             {'Размер пакета': '128 бит'},  # Увеличили размер пакета
             {'Размер пакета': '256 бит'}  # Увеличили размер пакета
         ]
-        setup_table(self.tablePackages, self.pkgs)
+        utils.setup_table(self.tablePackages, self.pkgs)
 
         self.clearButton.clicked.connect(self.clear)
         self.inputButton.clicked.connect(self.open_input)
@@ -267,6 +63,178 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.action_save.triggered.connect(self.save_file)
         self.action_open.triggered.connect(self.open_file)
+
+    def show_configurations(self, config_min_cost, config_min_delay, config_optimal):
+        """
+        Отображает окно с конфигурациями.
+        """
+        # Создаём новое окно
+        config_viewer = QtWidgets.QDialog(self)
+        config_viewer.setWindowTitle("Конфигурации сети")
+        config_viewer.setGeometry(100, 100, 800, 600)
+
+        # Создаём вкладки
+        tabs = QTabWidget()
+        tab_min_cost = QWidget()
+        tab_min_delay = QWidget()
+        tab_optimal = QWidget()
+
+        # Добавляем вкладки
+        tabs.addTab(tab_min_cost, "Минимальная стоимость")
+        tabs.addTab(tab_min_delay, "Минимальная задержка")
+        tabs.addTab(tab_optimal, "Оптимальная конфигурация")
+
+        # Настраиваем вкладки
+        self.setup_config_tab(tab_min_cost, config_min_cost)
+        self.setup_config_tab(tab_min_delay, config_min_delay)
+        self.setup_config_tab(tab_optimal, config_optimal)
+
+        # Основной layout
+        layout = QVBoxLayout()
+        layout.addWidget(tabs)
+        config_viewer.setLayout(layout)
+
+        # Отображаем окно
+        config_viewer.exec()
+
+    def setup_config_tab(self, tab, config):
+        """
+        Настраивает вкладку с информацией о конфигурации.
+        """
+        layout = QVBoxLayout()
+
+        # Выбор размера пакета
+        packet_size_label = QLabel("Размер пакета:")
+        packet_size_combo = QComboBox()
+        for pkg in self.pkgs:
+            packet_size_combo.addItem(pkg['Размер пакета'])
+        packet_size_combo.currentIndexChanged.connect(
+            lambda: self.update_config_tab(tab, config, packet_size_combo.currentText(), True)
+        )
+
+        # Таблица с каналами и маршрутизаторами
+        table = QTableWidget()
+        table.setColumnCount(3)
+        table.setHorizontalHeaderLabels(["Тип", "Имя", "Параметры"])
+
+        # Граф для визуализации
+        graph_widget = graph_class.GraphWidget()
+
+        # Добавляем элементы на вкладку
+        layout.addWidget(packet_size_label)
+        layout.addWidget(packet_size_combo)
+        layout.addWidget(table)
+        layout.addWidget(graph_widget)
+
+        tab.setLayout(layout)
+        self.update_config_tab(tab, config, self.pkgs[0]['Размер пакета'], False)
+
+    def update_config_tab(self, tab, config, packet_size_str, from_pkg):
+        """
+        Обновляет информацию на вкладке.
+        """
+        # Получаем размер пакета
+        packet_size = int(packet_size_str.split()[0])
+
+        if from_pkg is False:
+            # Очищаем таблицу
+            table = tab.findChild(QTableWidget)
+            table.setRowCount(0)
+            table.setColumnCount(4)
+            table.setHorizontalHeaderLabels(
+                ["Канал/Узел", "Выбранный канал/Маршрутизатор", "Пропускная способность", "Стоимость в месяц"])
+
+            # Добавляем каналы
+            if 'channels' in config and isinstance(config['channels'], dict):
+                for edge, channel in config['channels'].items():
+                    if isinstance(channel, dict):  # Проверяем, что channel — это словарь
+                        row_position = table.rowCount()
+                        table.insertRow(row_position)
+                        table.setItem(row_position, 0, QTableWidgetItem(f"{edge[0]} - {edge[1]}"))
+                        table.setItem(row_position, 1, QTableWidgetItem(channel.get('Канал', 'N/A')))
+                        table.setItem(row_position, 2, QTableWidgetItem(channel.get('Пропускная способность', 'N/A')))
+                        table.setItem(row_position, 3, QTableWidgetItem(channel.get('Стоимость аренды', 'N/A')))
+
+            # Добавляем маршрутизаторы
+            if 'routers' in config and isinstance(config['routers'], dict):
+                for node, router in config['routers'].items():
+                    if isinstance(router, dict):  # Проверяем, что router — это словарь
+                        row_position = table.rowCount()
+                        table.insertRow(row_position)
+                        table.setItem(row_position, 0, QTableWidgetItem(node))
+                        table.setItem(row_position, 1, QTableWidgetItem(router.get('Модель', 'N/A')))
+                        table.setItem(row_position, 2, QTableWidgetItem(router.get('Пропускная способность', 'N/A')))
+                        table.setItem(row_position, 3, QTableWidgetItem(router.get('Стоимость', 'N/A')))
+
+            # Обновляем граф
+            graph_widget = tab.findChild(graph_class.GraphWidget)
+            self.update_config_graph(graph_widget, config)
+
+        # Вычисляем задержку
+        delay = self.calculate_config_delay(config, packet_size)
+
+        # Вычисляем стоимость внедрения и обслуживания
+        implementation_cost = self.calculate_implementation_cost(config)
+        maintenance_cost = self.calculate_maintenance_cost(config)
+
+        # Обновляем информацию о задержке и стоимости
+        info_label = tab.findChild(QLabel, "info_label")
+        if not info_label:
+            info_label = QLabel()
+            info_label.setObjectName("info_label")
+            tab.layout().addWidget(info_label)
+        info_label.setText(
+            f"Средняя задержка: {delay:.6f} секунд\n"
+            f"Стоимость внедрения: {implementation_cost} рублей\n"
+            f"Стоимость обслуживания: {maintenance_cost} рублей/месяц"
+        )
+
+    def update_config_graph(self, graph_widget, config):
+        """
+        Обновляет граф на вкладке.
+        """
+        G = nx.Graph()
+
+        # Добавляем узлы
+        if 'routers' in config and isinstance(config['routers'], dict):
+            for node in config['routers'].keys():
+                G.add_node(node)
+
+        # Добавляем рёбра
+        if 'channels' in config and isinstance(config['channels'], dict):
+            for edge in config['channels'].keys():
+                G.add_edge(edge[0], edge[1])
+
+        # Отрисовываем граф
+        pos = nx.spring_layout(G)
+        edge_labels = {}
+        node_labels = {}
+
+        if 'channels' in config and isinstance(config['channels'], dict):
+            for edge, channel in config['channels'].items():
+                if isinstance(channel, dict):  # Проверяем, что channel — это словарь
+                    edge_labels[edge] = channel.get('Канал', 'N/A')
+
+        if 'routers' in config and isinstance(config['routers'], dict):
+            for node, router in config['routers'].items():
+                if isinstance(router, dict):  # Проверяем, что router — это словарь
+                    node_labels[node] = router.get('Модель', 'N/A')
+
+        graph_widget.plot(G, pos, edge_labels, node_labels)
+
+    def calculate_config_delay(self, config, packet_size):
+        """
+        Вычисляет задержку для конфигурации.
+        """
+        total_delay = 0
+        if 'channels' in config and isinstance(config['channels'], dict):
+            for edge, channel in config['channels'].items():
+                if isinstance(channel, dict):  # Проверяем, что channel — это словарь
+                    bandwidth = int(channel.get('Пропускная способность', '0').split()[0])
+                    flow = 0  # Здесь нужно получить поток для ребра (пока заглушка)
+                    if bandwidth > flow:
+                        total_delay += packet_size / (bandwidth - flow)
+        return total_delay / len(config['channels']) if config.get('channels') else 0
 
     def show_graph(self):
         G = nx.Graph()
@@ -282,10 +250,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 G.add_edge(channel['Из узла'], channel['В узел'])
 
         # Рассчитываем потоки для каналов
-        channel_flows = calculate_channel_flows(G, self.loads)
+        channel_flows = utils.calculate_channel_flows(G, self.loads)
 
         # Рассчитываем потоки для узлов
-        node_flows = calculate_node_flows(G, channel_flows)
+        node_flows = utils.calculate_node_flows(G, channel_flows)
 
         # Конфигурация с минимальной задержкой
         min_delay_config = self.find_min_delay_configuration(channel_flows, node_flows)
@@ -333,6 +301,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.graph_widget.plot(G, pos, edge_labels, node_labels)
         self.plotWidget.setVisible(True)
 
+        self.show_configurations(min_cost_config, min_delay_config, optimal_config)
+
     def open_edit(self):
         self.edit_dialog = EditDialog(self.ps, self.rs, self.channels, self.pkgs, self.loads)
         self.edit_dialog.exec()
@@ -345,9 +315,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.clear()
             self.ps = self.edit_dialog.points
             self.loads = self.edit_dialog.loads
+            self.channels = self.edit_dialog.channels
             self.edit_dialog.clear()
             self.put_info(self.ps, self.loads)
-            self.get_info(self.loads)
             self.show_graph()
 
     def open_input(self):
@@ -367,8 +337,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.show_graph()
 
     def put_info(self, ps, loads):
-        setup_table(self.tablePoint, ps)
-        setup_matrix(self.tableUsages, len(loads) // 2, [str(i + 1) for i in range(len(loads) // 2)], loads, self.ps)
+        utils.setup_table(self.tablePoint, ps)
+        utils.setup_matrix(self.tableUsages, len(loads) // 2, [str(i + 1) for i in range(len(loads) // 2)], loads, self.ps)
 
     def get_info(self, load):
         for item in load:
@@ -423,15 +393,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # Сохраняем в файл
             name = QtWidgets.QFileDialog.getSaveFileName(self, 'Сохранить файл')[0]
             if not name:
-                error("Не указано имя файла!")
+                utils.error("Не указано имя файла!")
                 return
 
             with open(f"{name}.json", "w", encoding="utf-8") as fh:
                 json.dump(to_save, fh, ensure_ascii=False, indent=4)
 
-            error(f"Файл успешно сохранён по адресу:\n{name}.json")
+            utils.error(f"Файл успешно сохранён по адресу:\n{name}.json")
         except Exception as e:
-            error(f"Ошибка при сохранении файла: {str(e)}")
+            utils.error(f"Ошибка при сохранении файла: {str(e)}")
 
     def open_file(self):
         file, _ = QtWidgets.QFileDialog.getOpenFileName(self,
@@ -439,7 +409,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                                         './',
                                                         'Config (*.json)')
         if not file:
-            error("Файл не выбран!")
+            utils.error("Файл не выбран!")
             return
 
         try:
@@ -485,7 +455,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.show_graph()
 
         except Exception as e:
-            error(f"Ошибка при чтении файла: {str(e)}")
+            utils.error(f"Ошибка при чтении файла: {str(e)}")
 
     def find_min_cost_channel(self, flow):
         """
@@ -564,6 +534,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for edge, flow in channel_flows.items():
             if flow > 0:  # Только для рёбер с ненулевой нагрузкой
                 if edge in selected_channels:
+                    bandwidth = 0
                     channel_name = selected_channels[edge]
                     # Находим пропускную способность выбранного канала
                     for channel in self.chs:
@@ -601,12 +572,46 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             average_delay = self.calculate_average_delay(edge_delays)
             print(f"{pkg['Размер пакета']} - {average_delay:.6f} секунд")
 
+    def calculate_implementation_cost(self, config):
+        """
+        Вычисляет стоимость внедрения конфигурации.
+        """
+        implementation_cost = 0
+
+        # Стоимость маршрутизаторов
+        if 'routers' in config and isinstance(config['routers'], dict):
+            for router in config['routers'].values():
+                if isinstance(router, dict):
+                    cost = int(router.get('Стоимость', '0').split()[0])  # Извлекаем стоимость
+                    implementation_cost += cost
+
+        # Стоимость аренды каналов за первый месяц
+        if 'channels' in config and isinstance(config['channels'], dict):
+            for channel in config['channels'].values():
+                if isinstance(channel, dict):
+                    cost = int(channel.get('Стоимость аренды', '0').split()[0])  # Извлекаем стоимость
+                    implementation_cost += cost
+
+        return implementation_cost
+
+    def calculate_maintenance_cost(self, config):
+        """
+        Вычисляет стоимость обслуживания конфигурации.
+        """
+        maintenance_cost = 0
+
+        # Стоимость аренды каналов
+        if 'channels' in config and isinstance(config['channels'], dict):
+            for channel in config['channels'].values():
+                if isinstance(channel, dict):
+                    cost = int(channel.get('Стоимость аренды', '0').split()[0])  # Извлекаем стоимость
+                    maintenance_cost += cost
+
+        return maintenance_cost
+
     def find_min_delay_configuration(self, channel_flows, node_flows):
         """
         Выбирает каналы и маршрутизаторы с минимальной задержкой.
-        :param channel_flows: Словарь с потоками для каждого ребра.
-        :param node_flows: Словарь с потоками для каждого узла.
-        :return: Словарь с конфигурацией (каналы, маршрутизаторы, средняя задержка, стоимость).
         """
         config = {
             'channels': {},
@@ -627,7 +632,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         max_bandwidth = bandwidth
                         selected_channel = channel
                 if selected_channel:
-                    config['channels'][edge] = selected_channel['Канал']
+                    config['channels'][edge] = selected_channel
                     config['total_cost'] += int(selected_channel['Стоимость аренды'].split()[0])
 
         # Выбираем маршрутизаторы с максимальной пропускной способностью
@@ -642,7 +647,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         max_bandwidth = bandwidth
                         selected_router = router
                 if selected_router:
-                    config['routers'][node] = selected_router['Модель']
+                    config['routers'][node] = selected_router
                     config['total_cost'] += int(selected_router['Стоимость'].split()[0])
 
         # Вычисляем среднюю задержку
@@ -655,9 +660,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def find_min_cost_configuration(self, channel_flows, node_flows):
         """
         Выбирает каналы и маршрутизаторы с минимальной стоимостью.
-        :param channel_flows: Словарь с потоками для каждого ребра.
-        :param node_flows: Словарь с потоками для каждого узла.
-        :return: Словарь с конфигурацией (каналы, маршрутизаторы, средняя задержка, стоимость).
         """
         config = {
             'channels': {},
@@ -679,7 +681,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         min_cost = cost
                         selected_channel = channel
                 if selected_channel:
-                    config['channels'][edge] = selected_channel['Канал']
+                    config['channels'][edge] = selected_channel
                     config['total_cost'] += min_cost
 
         # Выбираем маршрутизаторы с минимальной стоимостью
@@ -695,7 +697,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         min_cost = cost
                         selected_router = router
                 if selected_router:
-                    config['routers'][node] = selected_router['Модель']
+                    config['routers'][node] = selected_router
                     config['total_cost'] += min_cost
 
         # Вычисляем среднюю задержку
