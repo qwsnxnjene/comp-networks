@@ -1,4 +1,3 @@
-
 import sys
 import time
 import json
@@ -21,6 +20,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.plotWidget.setVisible(False)
         self.graph_widget = graph_class.GraphWidget(self.plotWidget)
+
+        self.open_config_button.clicked.connect(self.open_configurations)
 
         self.dialog = InputDialog()
         self.edges = []
@@ -64,6 +65,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_save.triggered.connect(self.save_file)
         self.action_open.triggered.connect(self.open_file)
 
+    def open_configurations(self):
+        """
+        Открывает окно с конфигурациями.
+        """
+        if not hasattr(self, 'min_cost_config') or not hasattr(self, 'min_delay_config') or not hasattr(self,
+                                                                                                        'optimal_config'):
+            utils.error("Конфигурации не рассчитаны. Сначала постройте граф.")
+            return
+
+        # Открываем окно с конфигурациями
+        self.show_configurations(self.min_cost_config, self.min_delay_config, self.optimal_config)
+
     def show_configurations(self, config_min_cost, config_min_delay, config_optimal):
         """
         Отображает окно с конфигурациями.
@@ -71,7 +84,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Создаём новое окно
         config_viewer = QtWidgets.QDialog(self)
         config_viewer.setWindowTitle("Конфигурации сети")
-        config_viewer.setGeometry(100, 100, 800, 600)
+        config_viewer.setGeometry(100, 100, 1000, 800)
 
         # Создаём вкладки
         tabs = QTabWidget()
@@ -109,13 +122,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for pkg in self.pkgs:
             packet_size_combo.addItem(pkg['Размер пакета'])
         packet_size_combo.currentIndexChanged.connect(
-            lambda: self.update_config_tab(tab, config, packet_size_combo.currentText(), True)
+            lambda: self.update_config_tab(tab, config, packet_size_combo.currentText())
         )
 
         # Таблица с каналами и маршрутизаторами
         table = QTableWidget()
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["Тип", "Имя", "Параметры"])
+        table.setColumnCount(4)
+        table.setHorizontalHeaderLabels(
+            ["Канал/Узел", "Выбранный канал/Маршрутизатор", "Пропускная способность", "Стоимость в месяц"])
+        table.setMinimumHeight(200)  # Устанавливаем минимальную высоту таблицы
 
         # Граф для визуализации
         graph_widget = graph_class.GraphWidget()
@@ -127,48 +142,54 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         layout.addWidget(graph_widget)
 
         tab.setLayout(layout)
-        self.update_config_tab(tab, config, self.pkgs[0]['Размер пакета'], False)
+        self.update_config_tab(tab, config, self.pkgs[0]['Размер пакета'])
 
-    def update_config_tab(self, tab, config, packet_size_str, from_pkg):
+    def update_config_tab(self, tab, config, packet_size_str):
         """
         Обновляет информацию на вкладке.
         """
         # Получаем размер пакета
         packet_size = int(packet_size_str.split()[0])
 
-        if from_pkg is False:
-            # Очищаем таблицу
-            table = tab.findChild(QTableWidget)
-            table.setRowCount(0)
-            table.setColumnCount(4)
-            table.setHorizontalHeaderLabels(
-                ["Канал/Узел", "Выбранный канал/Маршрутизатор", "Пропускная способность", "Стоимость в месяц"])
+        # Очищаем таблицу
+        table = tab.findChild(QTableWidget)
+        table.setRowCount(0)
+        table.setColumnCount(4)
+        table.setHorizontalHeaderLabels(
+            ["Канал/Узел", "Выбранный канал/Маршрутизатор", "Пропускная способность", "Стоимость в месяц"])
 
-            # Добавляем каналы
-            if 'channels' in config and isinstance(config['channels'], dict):
-                for edge, channel in config['channels'].items():
-                    if isinstance(channel, dict):  # Проверяем, что channel — это словарь
-                        row_position = table.rowCount()
-                        table.insertRow(row_position)
-                        table.setItem(row_position, 0, QTableWidgetItem(f"{edge[0]} - {edge[1]}"))
-                        table.setItem(row_position, 1, QTableWidgetItem(channel.get('Канал', 'N/A')))
-                        table.setItem(row_position, 2, QTableWidgetItem(channel.get('Пропускная способность', 'N/A')))
-                        table.setItem(row_position, 3, QTableWidgetItem(channel.get('Стоимость аренды', 'N/A')))
+        # Добавляем каналы
+        if 'channels' in config and isinstance(config['channels'], dict):
+            for edge, channel in config['channels'].items():
+                if isinstance(channel, dict):  # Проверяем, что channel — это словарь
+                    row_position = table.rowCount()
+                    table.insertRow(row_position)
+                    table.setItem(row_position, 0, QTableWidgetItem(f"{edge[0]} - {edge[1]}"))
+                    table.setItem(row_position, 1, QTableWidgetItem(channel.get('Канал', 'N/A')))
+                    table.setItem(row_position, 2, QTableWidgetItem(channel.get('Пропускная способность', 'N/A')))
+                    table.setItem(row_position, 3, QTableWidgetItem(channel.get('Стоимость аренды', 'N/A')))
 
-            # Добавляем маршрутизаторы
-            if 'routers' in config and isinstance(config['routers'], dict):
-                for node, router in config['routers'].items():
-                    if isinstance(router, dict):  # Проверяем, что router — это словарь
-                        row_position = table.rowCount()
-                        table.insertRow(row_position)
-                        table.setItem(row_position, 0, QTableWidgetItem(node))
-                        table.setItem(row_position, 1, QTableWidgetItem(router.get('Модель', 'N/A')))
-                        table.setItem(row_position, 2, QTableWidgetItem(router.get('Пропускная способность', 'N/A')))
-                        table.setItem(row_position, 3, QTableWidgetItem(router.get('Стоимость', 'N/A')))
+        # Добавляем маршрутизаторы
+        if 'routers' in config and isinstance(config['routers'], dict):
+            for node, router in config['routers'].items():
+                if isinstance(router, dict):  # Проверяем, что router — это словарь
+                    row_position = table.rowCount()
+                    table.insertRow(row_position)
+                    table.setItem(row_position, 0, QTableWidgetItem(node))
+                    table.setItem(row_position, 1, QTableWidgetItem(router.get('Модель', 'N/A')))
+                    table.setItem(row_position, 2, QTableWidgetItem(router.get('Пропускная способность', 'N/A')))
+                    table.setItem(row_position, 3, QTableWidgetItem(router.get('Стоимость', 'N/A')))
 
-            # Обновляем граф
-            graph_widget = tab.findChild(graph_class.GraphWidget)
-            self.update_config_graph(graph_widget, config)
+        # Автоматически подгоняем ширину столбцов под содержимое
+        table.resizeColumnsToContents()
+
+        # Увеличиваем высоту строк
+        for row in range(table.rowCount()):
+            table.setRowHeight(row, 30)  # Устанавливаем высоту строки в 30 пикселей
+
+        # Обновляем граф
+        graph_widget = tab.findChild(graph_class.GraphWidget)
+        self.update_config_graph(graph_widget, config)
 
         # Вычисляем задержку
         delay = self.calculate_config_delay(config, packet_size)
@@ -256,37 +277,37 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         node_flows = utils.calculate_node_flows(G, channel_flows)
 
         # Конфигурация с минимальной задержкой
-        min_delay_config = self.find_min_delay_configuration(channel_flows, node_flows)
+        self.min_delay_config = self.find_min_delay_configuration(channel_flows, node_flows)
         print("Конфигурация с минимальной задержкой:")
-        print(f"Каналы: {min_delay_config['channels']}")
-        print(f"Маршрутизаторы: {min_delay_config['routers']}")
-        if min_delay_config['average_delay'] == float('inf'):
+        print(f"Каналы: {self.min_delay_config['channels']}")
+        print(f"Маршрутизаторы: {self.min_delay_config['routers']}")
+        if self.min_delay_config['average_delay'] == float('inf'):
             print("Средняя задержка: Канал перегружен")
         else:
-            print(f"Средняя задержка: {min_delay_config['average_delay']:.6f} секунд")
-        print(f"Общая стоимость: {min_delay_config['total_cost']} рублей/месяц")
+            print(f"Средняя задержка: {self.min_delay_config['average_delay']:.6f} секунд")
+        print(f"Общая стоимость: {self.min_delay_config['total_cost']} рублей/месяц")
 
         # Конфигурация с минимальной стоимостью
-        min_cost_config = self.find_min_cost_configuration(channel_flows, node_flows)
+        self.min_cost_config = self.find_min_cost_configuration(channel_flows, node_flows)
         print("\nКонфигурация с минимальной стоимостью:")
-        print(f"Каналы: {min_cost_config['channels']}")
-        print(f"Маршрутизаторы: {min_cost_config['routers']}")
-        if min_cost_config['average_delay'] == float('inf'):
+        print(f"Каналы: {self.min_cost_config['channels']}")
+        print(f"Маршрутизаторы: {self.min_cost_config['routers']}")
+        if self.min_cost_config['average_delay'] == float('inf'):
             print("Средняя задержка: Канал перегружен")
         else:
-            print(f"Средняя задержка: {min_cost_config['average_delay']:.6f} секунд")
-        print(f"Общая стоимость: {min_cost_config['total_cost']} рублей/месяц")
+            print(f"Средняя задержка: {self.min_cost_config['average_delay']:.6f} секунд")
+        print(f"Общая стоимость: {self.min_cost_config['total_cost']} рублей/месяц")
 
-        optimal_config = self.find_optimal_configuration(channel_flows, node_flows, packet_size=16, alpha=0.5)
-
-        if optimal_config:
-            print("Оптимальная конфигурация:")
-            print(f"Каналы: {optimal_config['channels']}")
-            print(f"Маршрутизаторы: {optimal_config['routers']}")
-            print(f"Средняя задержка: {optimal_config['average_delay']:.6f} секунд")
-            print(f"Общая стоимость: {optimal_config['total_cost']} рублей/месяц")
+        # Оптимальная конфигурация
+        self.optimal_config = self.find_optimal_configuration(channel_flows, node_flows, packet_size=16, alpha=0.5)
+        print("\nОптимальная конфигурация:")
+        print(f"Каналы: {self.optimal_config['channels']}")
+        print(f"Маршрутизаторы: {self.optimal_config['routers']}")
+        if self.optimal_config['average_delay'] == float('inf'):
+            print("Средняя задержка: Канал перегружен")
         else:
-            print("Оптимальная конфигурация не найдена.")
+            print(f"Средняя задержка: {self.optimal_config['average_delay']:.6f} секунд")
+        print(f"Общая стоимость: {self.optimal_config['total_cost']} рублей/месяц")
 
         # Преобразуем потоки в формат для отображения
         edge_labels = {edge: f"{flow:.2f} бит/с" for edge, flow in channel_flows.items()}
@@ -300,8 +321,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Отрисовываем граф с подписями
         self.graph_widget.plot(G, pos, edge_labels, node_labels)
         self.plotWidget.setVisible(True)
-
-        self.show_configurations(min_cost_config, min_delay_config, optimal_config)
 
     def open_edit(self):
         self.edit_dialog = EditDialog(self.ps, self.rs, self.channels, self.pkgs, self.loads)
@@ -338,7 +357,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def put_info(self, ps, loads):
         utils.setup_table(self.tablePoint, ps)
-        utils.setup_matrix(self.tableUsages, len(loads) // 2, [str(i + 1) for i in range(len(loads) // 2)], loads, self.ps)
+        utils.setup_matrix(self.tableUsages, len(loads) // 2, [str(i + 1) for i in range(len(loads) // 2)], loads,
+                           self.ps)
 
     def get_info(self, load):
         for item in load:
