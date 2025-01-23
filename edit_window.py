@@ -265,10 +265,8 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogAdd):
                 tmp = dict()
                 for j in range(i + 1, column_count):
                     v = self.tableLoads.item(i, j).text()
-                    if v == '0' or v == '-':
-                        continue
                     if is_number(v):
-                        if int(v) <= 0:
+                        if int(v) < 0:
                             error(f"Отрицательный объём информации в {i + 1} строке {j + 1} столбце матрицы нагрузки")
                             return
                         tmp['Из узла'] = [point['Имя узла'] for point in self.points if point['Номер'] == str(i + 1)][0]
